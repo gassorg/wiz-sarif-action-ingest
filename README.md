@@ -1,0 +1,1 @@
+# wiz-sarif-action-ingest
