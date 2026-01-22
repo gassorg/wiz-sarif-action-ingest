@@ -1,0 +1,448 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wiz.io/ingestionmodel.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "integrationId",
+    "dataSources"
+  ],
+  "properties": {
+    "integrationId": {
+      "type": "string"
+    },
+    "dataSources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dataSource"
+      }
+    }
+  },
+  "$defs": {
+    "dataSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "assets"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "analysisDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/asset"
+          }
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "details"
+          ],
+          "title": "details"
+        }
+      ],
+      "properties": {
+        "analysisDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "details": {
+          "$ref": "#/$defs/assetDetails"
+        },
+        "vulnerabilityFindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/vulnerabilityFinding"
+          }
+        }
+      }
+    },
+    "assetDetails": {
+      "type": "object",
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": ["virtualMachine"]
+        },
+        {
+          "required": ["networkAddress"]
+        },
+        {
+          "required": ["assetEndpoint"]
+        }
+      ],
+      "properties": {
+        "networkAddress": {
+          "$ref": "#/$defs/assetNetworkAddress"
+        },
+        "virtualMachine": {
+          "$ref": "#/$defs/assetVirtualMachine"
+        },
+        "assetEndpoint": {
+          "$ref": "#/$defs/assetEndpoint"
+        }
+      }
+    },
+    "assetNetworkAddress": {
+      "type": "object",
+      "required": ["assetId", "name", "addressType", "address"],
+      "additionalProperties": false,
+      "properties": {
+        "assetId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "addressType": {
+          "type": "string",
+          "enum": ["IPV4", "IPV6", "DNS", "URL"]
+        },
+        "address": {
+          "type": "string"
+        },
+        "firstSeen": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "originalObject": {
+          "type": "object"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "assetVirtualMachine": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "assetId": {
+          "type": "string"
+        },
+        "biosUUID": {
+          "type": "string"
+        },
+        "cloudPlatformIdentifier": {
+          "type": "object",
+          "required": ["cloudPlatform"],
+          "additionalProperties": false,
+          "properties": {
+            "cloudPlatform": {
+              "type": "string",
+              "enum": ["ACK", "AKS", "AWS", "Alibaba", "Azure", "AzureDevOps", "BitbucketCloud", "BitbucketDataCenter", "Cloudflare", "Databricks", "EKS", "Firemon", "GCP", "GKE", "GenericDB", "GitHub", "GitLab", "IBM", "Kubernetes", "LKE", "Linode", "MongoDBAtlas", "OCI", "OKE", "Okta", "OpenAI", "OpenShift", "OpenStack", "Snowflake", "Terraform", "Wiz", "vSphere"]
+            },
+            "resourceId": {
+              "type": "string"
+            },
+            "vmInstanceId": {
+              "type": "string"
+            }
+          }
+        },
+        "firstSeen": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "fqdns": {
+          "description": "Fully qualified domain names",
+          "items": {
+            "format": "hostname",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "hostname": {
+          "type": "string"
+        },
+        "ipAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "networkInterfaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "macAddress": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "networkAddresses": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/assetNetworkAddress"
+                }
+              }
+            }
+          }
+        },
+        "operatingSystem": {
+          "type": "string",
+          "enum": ["Linux", "Windows", "Unknown", "MacOS"]
+        },
+        "originalObject": {
+          "type": "object"
+        },
+        "serialNumber": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "assetEndpoint": {
+      "additionalProperties": false,
+      "properties": {
+        "assetId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "assetName": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "firstSeen": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "host": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "originalObject": {
+          "type": "object"
+        },
+        "port": {
+          "maximum": 65535,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "protocol": {
+          "$ref": "#/$defs/protocol"
+        }
+      }
+    },
+    "detectionMethod": {
+      "type": "string",
+      "enum": [
+        "Package",
+        "DefaultPackage",
+        "Library",
+        "ConfigFile",
+        "OpenPort",
+        "StartupService",
+        "Configuration",
+        "ClonedRepository",
+        "OS",
+        "ArtifactsOnDisk",
+        "WindowsRegistry",
+        "InstalledProgram",
+        "FilePath",
+        "WindowsService",
+        "InstalledProgramByService",
+        "HostedDatabaseScan",
+        "ExternalNetworkScan",
+        "CloudAPI",
+        "ThirdPartyAgent",
+        "AIModel",
+        "SASTScan",
+        "IDEExtension"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "None",
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ]
+    },
+    "protocol": {
+      "enum": [
+        "HTTP",
+        "HTTPS",
+        "Other",
+        "RDP",
+        "SSH",
+        "WinRM"
+      ],
+      "type": "string"
+    },
+    "targetComponent": {
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "library": {
+              "$ref": "#/$defs/vulnerableLibrary"
+            }
+          },
+          "required": [
+            "library"
+          ],
+          "title": "targetComponentLibrary"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "product": {
+              "$ref": "#/$defs/vulnerableProduct"
+            }
+          },
+          "required": [
+            "product"
+          ],
+          "title": "targetComponentProduct"
+        }
+      ],
+      "type": "object"
+    },
+    "vulnerableLibrary": {
+      "additionalProperties": false,
+      "properties": {
+        "filePath": {
+          "type": "string"
+        },
+        "fixedVersion": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "vulnerableProduct": {
+      "additionalProperties": false,
+      "properties": {
+        "fixedVersion": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "vulnerabilityFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "detailedName": {
+          "deprecated": true,
+          "type": "string"
+        },
+        "externalDetectionSource": {
+          "$ref": "#/$defs/detectionMethod"
+        },
+        "externalFindingLink": {
+          "type": "string"
+        },
+        "fixedVersion": {
+          "deprecated": true,
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "originalObject": {
+          "type": "object"
+        },
+        "policyReference": {
+          "$ref": "#/$defs/vulnerabilityFindingPolicyReference"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "source": {
+          "type": "string",
+          "deprecated": true
+        },
+        "targetComponent": {
+          "$ref": "#/$defs/targetComponent"
+        },
+        "validatedAtRuntime": {
+          "type": "boolean"
+        },
+        "version": {
+          "deprecated": true,
+          "type": "string"
+        }
+      }
+    },
+    "vulnerabilityFindingPolicyReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policyId",
+        "status",
+        "firstDetectedAt"
+      ],
+      "properties": {
+        "firstDetectedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "policyId": {
+          "type": "string"
+        },
+        "sourceUrl": {
+          "type": "string"
+        },
+        "violationId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
