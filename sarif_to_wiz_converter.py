@@ -14,7 +14,7 @@ import argparse
 import json
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
@@ -137,7 +137,7 @@ class SARIFtoWizConverter:
 
         data_source = {
             "id": f"{tool_name}-run-{run_idx}",
-            "analysisDate": datetime.utcnow().isoformat() + "Z",
+            "analysisDate": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "assets": []
         }
 
@@ -151,7 +151,7 @@ class SARIFtoWizConverter:
 
             if asset_id not in assets_map:
                 assets_map[asset_id] = {
-                    "analysisDate": data_source["analysisDate"],
+                    "analysisDate": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                     "details": asset_details,
                     "vulnerabilityFindings": []
                 }
@@ -201,20 +201,20 @@ class SARIFtoWizConverter:
         Returns:
             Tuple of (asset_id, asset_details)
         """
-        # Default to file-based asset (most common for SAST tools)
+        # Extract artifact information
         artifact_location = physical_location.get("artifactLocation", {})
         uri = artifact_location.get("uri", f"unknown-{result_idx}")
 
-        # For now, default to assetEndpoint as a generic fallback
-        # In future, could implement asset type detection logic
-        asset_id = f"{uri}-{result_idx}"
+        # Use URI as asset ID (unique per file)
+        asset_id = uri
 
+        # Create virtualMachine as the asset type - most flexible and general-purpose
+        # Works for any type of finding source (files, packages, services, etc.)
         asset_details = {
-            "assetEndpoint": {
+            "virtualMachine": {
                 "assetId": asset_id,
-                "assetName": uri,
-                "host": uri,
-                "firstSeen": datetime.utcnow().isoformat() + "Z"
+                "name": uri,
+                "hostname": uri
             }
         }
 
@@ -239,7 +239,6 @@ class SARIFtoWizConverter:
             "name": f"{rule_id}",
             "description": message_text,
             "severity": severity,
-            "detectionMethod": "SASTScan",
             "externalDetectionSource": "SASTScan"
         }
 
@@ -332,6 +331,9 @@ class PipelineProcessor:
             return False
         except Exception as e:
             logger.error(f"✗ Unexpected error processing {input_path}: {e}")
+            if logger.level == logging.DEBUG:
+                import traceback
+                traceback.print_exc()
             return False
 
     def process_directory(self, input_dir: Path, output_dir: Path) -> int:
