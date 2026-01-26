@@ -214,7 +214,8 @@ class SARIFtoWizConverter:
             "virtualMachine": {
                 "assetId": asset_id,
                 "name": uri,
-                "hostname": uri
+                "hostname": uri,
+                "firstSeen": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             }
         }
 
