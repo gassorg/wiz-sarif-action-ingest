@@ -303,6 +303,9 @@ def get_system_activity_status(system_activity_id):
     logging.info(f'# Step 5 complete: {status}')
     if status != "SUCCESS":
         print(f'System Activity ended with status: {status} and with result: {result}')
+    else:
+        logging.info('System Activity completed successfully')
+        print(f'System Activity ended with status: {status} and with result: {result}')
     return status
 
 

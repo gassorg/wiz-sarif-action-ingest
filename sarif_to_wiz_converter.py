@@ -81,12 +81,16 @@ class SARIFtoWizConverter:
         self,
         sarif_schema: SchemaValidator,
         wiz_schema: SchemaValidator,
-        integration_id: str = "sarif-integration"
+        integration_id: str = "sarif-integration",
+        repository_name: Optional[str] = None,
+        repository_url: Optional[str] = None
     ):
         """Initialize converter with schema validators."""
         self.sarif_validator = sarif_schema
         self.wiz_validator = wiz_schema
         self.integration_id = integration_id
+        self.repository_name = repository_name
+        self.repository_url = repository_url
 
     def convert(self, sarif_doc: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -208,16 +212,32 @@ class SARIFtoWizConverter:
         # Use URI as asset ID (unique per file)
         asset_id = uri
 
-        # Create virtualMachine as the asset type - most flexible and general-purpose
-        # Works for any type of finding source (files, packages, services, etc.)
-        asset_details = {
-            "virtualMachine": {
-                "assetId": asset_id,
-                "name": uri,
-                "hostname": uri,
-                "firstSeen": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        # If repository name and URL are provided, use repositoryBranch asset type
+        if self.repository_name and self.repository_url:
+            asset_details = {
+                "repositoryBranch": {
+                    "assetId": asset_id,
+                    "assetName": uri,
+                    "branchName": "main",
+                    "repository": {
+                        "name": self.repository_name,
+                        "url": self.repository_url
+                    },
+                    "vcs": "GitHub",
+                    "firstSeen": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+                }
             }
-        }
+        else:
+            # Create virtualMachine as the asset type - most flexible and general-purpose
+            # Works for any type of finding source (files, packages, services, etc.)
+            asset_details = {
+                "virtualMachine": {
+                    "assetId": asset_id,
+                    "name": uri,
+                    "hostname": uri,
+                    "firstSeen": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+                }
+            }
 
         return asset_id, asset_details
 
@@ -281,7 +301,9 @@ class PipelineProcessor:
         self,
         sarif_schema_path: Path,
         wiz_schema_path: Path,
-        integration_id: str = "sarif-integration"
+        integration_id: str = "sarif-integration",
+        repository_name: Optional[str] = None,
+        repository_url: Optional[str] = None
     ):
         """Initialize processor with schema validators."""
         self.sarif_validator = SchemaValidator(sarif_schema_path)
@@ -289,7 +311,9 @@ class PipelineProcessor:
         self.converter = SARIFtoWizConverter(
             self.sarif_validator,
             self.wiz_validator,
-            integration_id
+            integration_id,
+            repository_name,
+            repository_url
         )
 
     def process_file(self, input_path: Path, output_path: Path) -> bool:
@@ -396,6 +420,10 @@ Examples:
   # With custom integration ID
   python sarif_to_wiz_converter.py --input scan.sarif --output scan.wiz.json \\
     --integration-id my-org-sarif-scanner
+
+  # With repository information (creates repositoryBranch assets)
+  python sarif_to_wiz_converter.py --input scan.sarif --output scan.wiz.json \\
+    --repository-name "my-repo" --repository-url "https://github.com/org/my-repo"
         """
     )
 
@@ -424,6 +452,18 @@ Examples:
         type=str,
         default="sarif-integration",
         help="Integration ID for Wiz schema (default: sarif-integration)"
+    )
+    parser.add_argument(
+        "--repository-name",
+        type=str,
+        default=None,
+        help="Repository name for repositoryBranch asset type (e.g., 'my-repo')"
+    )
+    parser.add_argument(
+        "--repository-url",
+        type=str,
+        default=None,
+        help="Repository URL for repositoryBranch asset type (e.g., 'https://github.com/org/my-repo')"
     )
     parser.add_argument(
         "--sarif-schema",
@@ -466,12 +506,19 @@ Examples:
         logger.error("--output-dir required when using --input-dir")
         return 1
 
+    # Validate repository parameters (both or neither required)
+    if (args.repository_name and not args.repository_url) or (args.repository_url and not args.repository_name):
+        logger.error("Both --repository-name and --repository-url must be specified together")
+        return 1
+
     # Initialize processor
     try:
         processor = PipelineProcessor(
             args.sarif_schema,
             args.wiz_schema,
-            args.integration_id
+            args.integration_id,
+            args.repository_name,
+            args.repository_url
         )
     except Exception as e:
         logger.error(f"Failed to initialize processor: {e}")

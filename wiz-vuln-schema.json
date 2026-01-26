@@ -1,49 +1,48 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://wiz.io/ingestionmodel.schema.json",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "integrationId",
-    "dataSources"
-  ],
-  "properties": {
-    "integrationId": {
+  "$defs": {
+    "SASTCodeLibraryLanguage": {
+      "enum": [
+        "Java",
+        "Python",
+        "Javascript",
+        "Csharp",
+        "Php",
+        "Go",
+        "Ruby",
+        "Rust",
+        "Clojure",
+        "Swift",
+        "Hcl",
+        "Scala",
+        "Solidity",
+        "Typescript",
+        "Regex",
+        "Ocaml",
+        "Generic",
+        "Yaml",
+        "Html",
+        "Terraform",
+        "Sh",
+        "Dockerfile",
+        "C",
+        "Json",
+        "Kotlin",
+        "Lua",
+        "Julia",
+        "Cpp",
+        "Xml",
+        "Dart",
+        "Lisp",
+        "R",
+        "Scheme",
+        "Apex",
+        "Cairo",
+        "Elixir",
+        "Jsonnet"
+      ],
       "type": "string"
     },
-    "dataSources": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/dataSource"
-      }
-    }
-  },
-  "$defs": {
-    "dataSource": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "assets"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "analysisDate": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "assets": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/asset"
-          }
-        }
-      }
-    },
     "asset": {
-      "type": "object",
       "additionalProperties": false,
       "oneOf": [
         {
@@ -51,172 +50,125 @@
             "details"
           ],
           "title": "details"
+        },
+        {
+          "required": [
+            "assetIdentifier"
+          ],
+          "title": "assetLookupIdentifier"
         }
       ],
       "properties": {
         "analysisDate": {
-          "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "type": "string"
+        },
+        "assetIdentifier": {
+          "$ref": "#/$defs/assetIdentifier"
+        },
+        "attackSurfaceFindings": {
+          "items": {
+            "$ref": "#/$defs/attackSurfaceFinding"
+          },
+          "type": "array"
+        },
+        "cloudConfigurationFindings": {
+          "items": {
+            "$ref": "#/$defs/cloudConfigFinding"
+          },
+          "type": "array"
+        },
+        "customTags": {
+          "items": {
+            "$ref": "#/$defs/keyValue"
+          },
+          "type": "array"
+        },
+        "dataFindings": {
+          "items": {
+            "$ref": "#/$defs/dataFinding"
+          },
+          "type": "array"
         },
         "details": {
           "$ref": "#/$defs/assetDetails"
         },
-        "vulnerabilityFindings": {
-          "type": "array",
+        "events": {
           "items": {
-            "$ref": "#/$defs/vulnerabilityFinding"
-          }
-        }
-      }
-    },
-    "assetDetails": {
-      "type": "object",
-      "additionalProperties": false,
-      "oneOf": [
-        {
-          "required": ["virtualMachine"]
-        },
-        {
-          "required": ["networkAddress"]
-        },
-        {
-          "required": ["assetEndpoint"]
-        }
-      ],
-      "properties": {
-        "networkAddress": {
-          "$ref": "#/$defs/assetNetworkAddress"
-        },
-        "virtualMachine": {
-          "$ref": "#/$defs/assetVirtualMachine"
-        },
-        "assetEndpoint": {
-          "$ref": "#/$defs/assetEndpoint"
-        }
-      }
-    },
-    "assetNetworkAddress": {
-      "type": "object",
-      "required": ["assetId", "name", "addressType", "address"],
-      "additionalProperties": false,
-      "properties": {
-        "assetId": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "addressType": {
-          "type": "string",
-          "enum": ["IPV4", "IPV6", "DNS", "URL"]
-        },
-        "address": {
-          "type": "string"
-        },
-        "firstSeen": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "originalObject": {
-          "type": "object"
-        },
-        "tags": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "assetVirtualMachine": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "assetId": {
-          "type": "string"
-        },
-        "biosUUID": {
-          "type": "string"
-        },
-        "cloudPlatformIdentifier": {
-          "type": "object",
-          "required": ["cloudPlatform"],
-          "additionalProperties": false,
-          "properties": {
-            "cloudPlatform": {
-              "type": "string",
-              "enum": ["ACK", "AKS", "AWS", "Alibaba", "Azure", "AzureDevOps", "BitbucketCloud", "BitbucketDataCenter", "Cloudflare", "Databricks", "EKS", "Firemon", "GCP", "GKE", "GenericDB", "GitHub", "GitLab", "IBM", "Kubernetes", "LKE", "Linode", "MongoDBAtlas", "OCI", "OKE", "Okta", "OpenAI", "OpenShift", "OpenStack", "Snowflake", "Terraform", "Wiz", "vSphere"]
-            },
-            "resourceId": {
-              "type": "string"
-            },
-            "vmInstanceId": {
-              "type": "string"
-            }
-          }
-        },
-        "firstSeen": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "fqdns": {
-          "description": "Fully qualified domain names",
-          "items": {
-            "format": "hostname",
-            "type": "string"
+            "$ref": "#/$defs/event"
           },
           "type": "array"
         },
-        "hostname": {
-          "type": "string"
-        },
-        "ipAddresses": {
-          "type": "array",
+        "hostConfigurationFindings": {
           "items": {
-            "type": "string"
-          }
+            "$ref": "#/$defs/hostConfigFinding"
+          },
+          "type": "array"
         },
-        "name": {
-          "type": "string"
-        },
-        "networkInterfaces": {
-          "type": "array",
+        "sastFindings": {
           "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "macAddress": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "networkAddresses": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/$defs/assetNetworkAddress"
-                }
-              }
-            }
-          }
+            "$ref": "#/$defs/sastFindingV2"
+          },
+          "type": "array"
         },
-        "operatingSystem": {
-          "type": "string",
-          "enum": ["Linux", "Windows", "Unknown", "MacOS"]
+        "vulnerabilityFindings": {
+          "items": {
+            "$ref": "#/$defs/vulnerabilityFinding"
+          },
+          "type": "array"
         },
-        "originalObject": {
-          "type": "object"
-        },
-        "serialNumber": {
-          "type": "string"
-        },
-        "tags": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+        "webAppVulnerabilityFindings": {
+          "items": {
+            "$ref": "#/$defs/webAppVulnerabilityFinding"
+          },
+          "type": "array"
         }
-      }
+      },
+      "type": "object"
+    },
+    "assetDetails": {
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "virtualMachine"
+          ],
+          "title": "assetDetailsVirtualMachine"
+        },
+        {
+          "required": [
+            "networkAddress"
+          ],
+          "title": "assetDetailsNetworkAddress"
+        },
+        {
+          "required": [
+            "repositoryBranch"
+          ],
+          "title": "assetDetailsRepositoryBranch"
+        },
+        {
+          "required": [
+            "endpoint"
+          ],
+          "title": "assetDetailsEndpoint"
+        }
+      ],
+      "properties": {
+        "endpoint": {
+          "$ref": "#/$defs/assetEndpoint"
+        },
+        "networkAddress": {
+          "$ref": "#/$defs/assetNetworkAddress"
+        },
+        "repositoryBranch": {
+          "$ref": "#/$defs/assetRepositoryBranch"
+        },
+        "virtualMachine": {
+          "$ref": "#/$defs/assetVirtualMachine"
+        }
+      },
+      "type": "object"
     },
     "assetEndpoint": {
       "additionalProperties": false,
@@ -248,10 +200,561 @@
         "protocol": {
           "$ref": "#/$defs/protocol"
         }
-      }
+      },
+      "required": [
+        "assetId",
+        "assetName",
+        "host",
+        "port",
+        "protocol"
+      ],
+      "type": "object"
+    },
+    "assetIdentifier": {
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "providerId"
+          ],
+          "title": "assetIdentifierWithProviderId"
+        },
+        {
+          "required": [
+            "networkAddress",
+            "cloudPlatform"
+          ],
+          "title": "assetIdentifierWithNetworkAddress"
+        },
+        {
+          "required": [
+            "endpointUrl",
+            "cloudPlatform"
+          ],
+          "title": "assetIdentifierWithEndpointUrl"
+        }
+      ],
+      "properties": {
+        "cloudPlatform": {
+          "$ref": "#/$defs/cloudPlatform"
+        },
+        "endpointUrl": {
+          "type": "string"
+        },
+        "networkAddress": {
+          "type": "string"
+        },
+        "providerId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "assetNetworkAddress": {
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "addressType",
+            "address",
+            "assetId",
+            "name"
+          ],
+          "title": "assetDeprecatedNetworkAddressType"
+        },
+        {
+          "required": [
+            "dns",
+            "assetId",
+            "name"
+          ],
+          "title": "assetDNSNetworkAddress"
+        },
+        {
+          "required": [
+            "url",
+            "assetId",
+            "name"
+          ],
+          "title": "assetURLNetworkAddress"
+        },
+        {
+          "required": [
+            "ipAddress",
+            "assetId",
+            "name"
+          ],
+          "title": "assetIPAddressNetworkAddress"
+        }
+      ],
+      "properties": {
+        "address": {
+          "deprecated": true,
+          "type": "string"
+        },
+        "addressType": {
+          "$ref": "#/$defs/networkAddressType",
+          "deprecated": true
+        },
+        "assetId": {
+          "type": "string"
+        },
+        "cloudPlatform": {
+          "$ref": "#/$defs/cloudPlatform"
+        },
+        "dns": {
+          "type": "string"
+        },
+        "firstSeen": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "ipAddress": {
+          "type": "string"
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "originalObject": {
+          "type": "object"
+        },
+        "tags": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "url": {
+          "type": "string"
+        },
+        "vmCloudInstanceId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "assetRepositoryBranch": {
+      "additionalProperties": false,
+      "properties": {
+        "assetId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "assetName": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "branchName": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "firstSeen": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "isDefault": {
+          "type": "boolean"
+        },
+        "lastSeen": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "originalObject": {
+          "type": "object"
+        },
+        "repository": {
+          "$ref": "#/$defs/repository"
+        },
+        "vcs": {
+          "$ref": "#/$defs/vcs"
+        }
+      },
+      "required": [
+        "repository",
+        "vcs",
+        "assetId",
+        "assetName",
+        "branchName"
+      ],
+      "type": "object"
+    },
+    "assetVirtualMachine": {
+      "additionalProperties": false,
+      "properties": {
+        "assetId": {
+          "type": "string"
+        },
+        "biosUUID": {
+          "type": "string"
+        },
+        "cloudPlatformIdentifier": {
+          "$ref": "#/$defs/cloudPlatformIdentifier"
+        },
+        "firstSeen": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "fqdns": {
+          "description": "Fully qualified domain names",
+          "items": {
+            "pattern": "^(?:[_a-z0-9](?:[_a-z0-9-]{0,61}[a-z0-9])?\\.)+(?:[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?)?$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "hostname": {
+          "type": "string"
+        },
+        "ipAddresses": {
+          "description": "IPv4 or IPv6 addresses",
+          "items": {
+            "anyOf": [
+              {
+                "format": "ipv4",
+                "type": "string"
+              },
+              {
+                "format": "ipv6",
+                "type": "string"
+              }
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "networkInterfaces": {
+          "items": {
+            "$ref": "#/$defs/networkInterface"
+          },
+          "type": "array"
+        },
+        "operatingSystem": {
+          "$ref": "#/$defs/operatingSystem",
+          "deprecated": true
+        },
+        "originalObject": {
+          "type": "object"
+        },
+        "osInfo": {
+          "$ref": "#/$defs/oSInfo"
+        },
+        "serialNumber": {
+          "type": "string"
+        },
+        "tags": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "assetId",
+        "name",
+        "firstSeen"
+      ],
+      "type": "object"
+    },
+    "attackSurfaceFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "assessmentDetails": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "externalFindingLink": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "type": {
+          "$ref": "#/$defs/attackSurfaceFindingType"
+        },
+        "vulnerabilities": {
+          "items": {
+            "pattern": "(?i)^(cve-\\d+)",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "weaknesses": {
+          "items": {
+            "pattern": "^CWE-\\d+$",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "assessmentDetails",
+        "remediation",
+        "severity",
+        "externalFindingLink",
+        "type"
+      ],
+      "type": "object"
+    },
+    "attackSurfaceFindingType": {
+      "enum": [
+        "Misconfiguration",
+        "DefaultCredentials",
+        "ExploitabilityValidation",
+        "HighProfileThreat"
+      ],
+      "type": "string"
+    },
+    "cloudConfigFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "detailedName": {
+          "type": "string"
+        },
+        "externalDetectionSource": {
+          "$ref": "#/$defs/detectionMethod"
+        },
+        "externalFindingLink": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "source": {
+          "deprecated": true,
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "status"
+      ],
+      "type": "object"
+    },
+    "cloudPlatform": {
+      "enum": [
+        "ACK",
+        "AKS",
+        "AWS",
+        "Alibaba",
+        "Azure",
+        "AzureDevOps",
+        "BitbucketCloud",
+        "BitbucketDataCenter",
+        "Cloudflare",
+        "Crusoe",
+        "Databricks",
+        "DigitalOcean",
+        "EKS",
+        "Firemon",
+        "GCP",
+        "GKE",
+        "GenericDB",
+        "GitHub",
+        "GitLab",
+        "IBM",
+        "Kubernetes",
+        "LKE",
+        "Linode",
+        "MongoDBAtlas",
+        "OCI",
+        "OKE",
+        "OVHCloud",
+        "Okta",
+        "OpenAI",
+        "OpenShift",
+        "OpenStack",
+        "Snowflake",
+        "Terraform",
+        "Vercel",
+        "Wiz",
+        "vSphere"
+      ],
+      "type": "string"
+    },
+    "cloudPlatformIdentifier": {
+      "additionalProperties": false,
+      "properties": {
+        "cloudPlatform": {
+          "$ref": "#/$defs/cloudPlatform"
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "vmInstanceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "cloudPlatform"
+      ],
+      "type": "object"
+    },
+    "dataCategory": {
+      "enum": [
+        "PII",
+        "PHI",
+        "Financial",
+        "DigitalIdentity",
+        "Other",
+        "Secrets",
+        "Lineage",
+        "StaleData",
+        "Logs",
+        "ItOperations",
+        "BusinessConfidential"
+      ],
+      "type": "string"
+    },
+    "dataClassifier": {
+      "enum": [
+        "BUILTIN-1",
+        "BUILTIN-101",
+        "BUILTIN-102",
+        "BUILTIN-118",
+        "BUILTIN-119",
+        "BUILTIN-122",
+        "BUILTIN-125",
+        "BUILTIN-126",
+        "BUILTIN-139",
+        "BUILTIN-141",
+        "BUILTIN-158",
+        "BUILTIN-162",
+        "BUILTIN-174",
+        "BUILTIN-178",
+        "BUILTIN-182",
+        "BUILTIN-186",
+        "BUILTIN-20",
+        "BUILTIN-232",
+        "BUILTIN-25",
+        "BUILTIN-255",
+        "BUILTIN-265",
+        "BUILTIN-266",
+        "BUILTIN-267",
+        "BUILTIN-271",
+        "BUILTIN-274",
+        "BUILTIN-286",
+        "BUILTIN-32",
+        "BUILTIN-38",
+        "BUILTIN-39",
+        "BUILTIN-42",
+        "BUILTIN-43",
+        "BUILTIN-436",
+        "BUILTIN-46",
+        "BUILTIN-5",
+        "BUILTIN-53",
+        "BUILTIN-57",
+        "BUILTIN-92",
+        "BUILTIN-99",
+        "EXTERNAL-1"
+      ],
+      "type": "string"
+    },
+    "dataFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "dataCategory": {
+          "$ref": "#/$defs/dataCategory"
+        },
+        "dataClassifierId": {
+          "$ref": "#/$defs/dataClassifier"
+        },
+        "externalFindingLink": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "source": {
+          "deprecated": true,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "dataCategory",
+        "dataClassifierId"
+      ],
+      "type": "object"
+    },
+    "dataSource": {
+      "additionalProperties": false,
+      "properties": {
+        "analysisDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "assets": {
+          "items": {
+            "$ref": "#/$defs/asset"
+          },
+          "type": "array"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "isEnrichmentOnly": {
+          "type": "boolean"
+        },
+        "vulnerabilityFindingPolicies": {
+          "items": {
+            "$ref": "#/$defs/vulnerabilityFindingPolicy"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "assets"
+      ],
+      "type": "object"
     },
     "detectionMethod": {
-      "type": "string",
       "enum": [
         "Package",
         "DefaultPackage",
@@ -275,17 +778,1559 @@
         "AIModel",
         "SASTScan",
         "IDEExtension"
-      ]
+      ],
+      "type": "string"
     },
-    "severity": {
-      "type": "string",
+    "event": {
+      "additionalProperties": false,
+      "properties": {
+        "commandLine": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "externalFindingLink": {
+          "type": "string"
+        },
+        "hash": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "ipAddress": {
+          "type": "string"
+        },
+        "mitreTacticIds": {
+          "items": {
+            "$ref": "#/$defs/mitreTacticId"
+          },
+          "type": "array"
+        },
+        "mitreTacticNames": {
+          "items": {
+            "$ref": "#/$defs/mitreTacticName"
+          },
+          "type": "array"
+        },
+        "mitreTechniqueIds": {
+          "items": {
+            "$ref": "#/$defs/mitreTechniqueId"
+          },
+          "type": "array"
+        },
+        "mitreTechniqueNames": {
+          "items": {
+            "$ref": "#/$defs/mitreTechniqueName"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "principal": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/eventSeverity"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "externalFindingLink",
+        "mitreTacticIds",
+        "mitreTechniqueIds",
+        "id",
+        "timestamp",
+        "name",
+        "severity"
+      ],
+      "type": "object"
+    },
+    "eventSeverity": {
       "enum": [
-        "None",
-        "Low",
-        "Medium",
-        "High",
-        "Critical"
-      ]
+        "CRITICAL",
+        "HIGH",
+        "INFORMATIONAL",
+        "LOW",
+        "MEDIUM"
+      ],
+      "type": "string"
+    },
+    "hostConfigFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "externalFindingLink": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "source": {
+          "deprecated": true,
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        }
+      },
+      "required": [
+        "name",
+        "status"
+      ],
+      "type": "object"
+    },
+    "keyValue": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "type": "object"
+    },
+    "linuxPackageManager": {
+      "enum": [
+        "Yum",
+        "Apt",
+        "Apk",
+        "Portage",
+        "Zypper",
+        "Nix",
+        "Snap",
+        "Homebrew",
+        "KB",
+        "VIB",
+        "NonManaged"
+      ],
+      "type": "string"
+    },
+    "mitreTacticId": {
+      "enum": [
+        "TA0001",
+        "TA0002",
+        "TA0003",
+        "TA0004",
+        "TA0005",
+        "TA0006",
+        "TA0007",
+        "TA0008",
+        "TA0009",
+        "TA0010",
+        "TA0011",
+        "TA0040",
+        "TA0042",
+        "TA0043"
+      ],
+      "type": "string"
+    },
+    "mitreTacticName": {
+      "enum": [
+        "Collection",
+        "Command and Control",
+        "Credential Access",
+        "Defense Evasion",
+        "Discovery",
+        "Execution",
+        "Exfiltration",
+        "Impact",
+        "Initial Access",
+        "Lateral Movement",
+        "Persistence",
+        "Privilege Escalation",
+        "Reconnaissance",
+        "Resource Development"
+      ],
+      "type": "string"
+    },
+    "mitreTechniqueId": {
+      "enum": [
+        "T1001",
+        "T1001.001",
+        "T1001.002",
+        "T1001.003",
+        "T1003",
+        "T1003.001",
+        "T1003.002",
+        "T1003.003",
+        "T1003.004",
+        "T1003.005",
+        "T1003.006",
+        "T1003.007",
+        "T1003.008",
+        "T1005",
+        "T1006",
+        "T1007",
+        "T1008",
+        "T1010",
+        "T1011",
+        "T1011.001",
+        "T1012",
+        "T1014",
+        "T1016",
+        "T1016.001",
+        "T1018",
+        "T1020",
+        "T1020.001",
+        "T1021",
+        "T1021.001",
+        "T1021.002",
+        "T1021.004",
+        "T1021.005",
+        "T1021.006",
+        "T1021.007",
+        "T1025",
+        "T1027",
+        "T1027.001",
+        "T1027.002",
+        "T1027.003",
+        "T1027.004",
+        "T1027.005",
+        "T1027.006",
+        "T1027.007",
+        "T1027.008",
+        "T1027.009",
+        "T1027.010",
+        "T1027.011",
+        "T1029",
+        "T1030",
+        "T1033",
+        "T1036",
+        "T1036.001",
+        "T1036.002",
+        "T1036.003",
+        "T1036.004",
+        "T1036.005",
+        "T1036.006",
+        "T1036.007",
+        "T1036.008",
+        "T1037",
+        "T1037.001",
+        "T1037.002",
+        "T1037.003",
+        "T1037.004",
+        "T1037.005",
+        "T1039",
+        "T1040",
+        "T1041",
+        "T1046",
+        "T1047",
+        "T1048",
+        "T1048.001",
+        "T1048.002",
+        "T1048.003",
+        "T1049",
+        "T1052",
+        "T1052.001",
+        "T1053",
+        "T1053.002",
+        "T1053.003",
+        "T1053.005",
+        "T1053.006",
+        "T1053.007",
+        "T1055",
+        "T1055.001",
+        "T1055.002",
+        "T1055.003",
+        "T1055.004",
+        "T1055.005",
+        "T1055.008",
+        "T1055.009",
+        "T1055.011",
+        "T1055.012",
+        "T1055.013",
+        "T1055.014",
+        "T1055.015",
+        "T1056",
+        "T1056.001",
+        "T1056.002",
+        "T1056.003",
+        "T1056.004",
+        "T1057",
+        "T1059",
+        "T1059.001",
+        "T1059.002",
+        "T1059.003",
+        "T1059.004",
+        "T1059.005",
+        "T1059.006",
+        "T1059.007",
+        "T1059.008",
+        "T1059.009",
+        "T1068",
+        "T1069",
+        "T1069.001",
+        "T1069.002",
+        "T1069.003",
+        "T1070",
+        "T1070.001",
+        "T1070.002",
+        "T1070.003",
+        "T1070.004",
+        "T1070.005",
+        "T1070.006",
+        "T1070.007",
+        "T1070.008",
+        "T1070.009",
+        "T1071",
+        "T1071.001",
+        "T1071.002",
+        "T1071.003",
+        "T1071.004",
+        "T1072",
+        "T1074",
+        "T1074.001",
+        "T1074.002",
+        "T1078",
+        "T1078.001",
+        "T1078.002",
+        "T1078.003",
+        "T1078.004",
+        "T1080",
+        "T1082",
+        "T1083",
+        "T1087",
+        "T1087.001",
+        "T1087.002",
+        "T1087.003",
+        "T1087.004",
+        "T1090",
+        "T1090.001",
+        "T1090.002",
+        "T1090.003",
+        "T1090.004",
+        "T1091",
+        "T1092",
+        "T1095",
+        "T1098",
+        "T1098.001",
+        "T1098.002",
+        "T1098.003",
+        "T1098.004",
+        "T1098.005",
+        "T1102",
+        "T1102.001",
+        "T1102.002",
+        "T1102.003",
+        "T1104",
+        "T1105",
+        "T1106",
+        "T1110",
+        "T1110.001",
+        "T1110.002",
+        "T1110.003",
+        "T1110.004",
+        "T1111",
+        "T1112",
+        "T1113",
+        "T1114",
+        "T1114.001",
+        "T1114.002",
+        "T1114.003",
+        "T1115",
+        "T1119",
+        "T1120",
+        "T1123",
+        "T1124",
+        "T1125",
+        "T1127",
+        "T1127.001",
+        "T1129",
+        "T1132",
+        "T1132.001",
+        "T1132.002",
+        "T1133",
+        "T1134",
+        "T1134.001",
+        "T1134.002",
+        "T1134.003",
+        "T1134.004",
+        "T1134.005",
+        "T1135",
+        "T1136",
+        "T1136.001",
+        "T1136.002",
+        "T1136.003",
+        "T1137",
+        "T1137.001",
+        "T1137.002",
+        "T1137.003",
+        "T1137.004",
+        "T1137.005",
+        "T1137.006",
+        "T1140",
+        "T1176",
+        "T1185",
+        "T1187",
+        "T1189",
+        "T1190",
+        "T1195",
+        "T1195.001",
+        "T1195.002",
+        "T1195.003",
+        "T1197",
+        "T1199",
+        "T1200",
+        "T1201",
+        "T1202",
+        "T1203",
+        "T1204",
+        "T1204.001",
+        "T1204.002",
+        "T1204.003",
+        "T1205",
+        "T1205.001",
+        "T1205.002",
+        "T1207",
+        "T1210",
+        "T1211",
+        "T1212",
+        "T1213",
+        "T1213.001",
+        "T1213.002",
+        "T1213.003",
+        "T1216",
+        "T1216.001",
+        "T1217",
+        "T1218",
+        "T1218.001",
+        "T1218.002",
+        "T1218.003",
+        "T1218.004",
+        "T1218.005",
+        "T1218.007",
+        "T1218.008",
+        "T1218.009",
+        "T1218.010",
+        "T1218.011",
+        "T1218.012",
+        "T1218.013",
+        "T1218.014",
+        "T1219",
+        "T1220",
+        "T1221",
+        "T1222",
+        "T1222.001",
+        "T1222.002",
+        "T1480",
+        "T1480.001",
+        "T1482",
+        "T1484",
+        "T1484.001",
+        "T1484.002",
+        "T1485",
+        "T1486",
+        "T1489",
+        "T1490",
+        "T1491",
+        "T1491.001",
+        "T1491.002",
+        "T1495",
+        "T1496",
+        "T1497",
+        "T1497.001",
+        "T1497.002",
+        "T1497.003",
+        "T1498",
+        "T1498.001",
+        "T1498.002",
+        "T1499",
+        "T1499.001",
+        "T1499.002",
+        "T1499.003",
+        "T1499.004",
+        "T1505",
+        "T1505.001",
+        "T1505.002",
+        "T1505.003",
+        "T1505.004",
+        "T1505.005",
+        "T1518",
+        "T1518.001",
+        "T1525",
+        "T1526",
+        "T1528",
+        "T1529",
+        "T1530",
+        "T1531",
+        "T1534",
+        "T1535",
+        "T1537",
+        "T1538",
+        "T1539",
+        "T1542",
+        "T1542.001",
+        "T1542.002",
+        "T1542.003",
+        "T1542.004",
+        "T1542.005",
+        "T1543",
+        "T1543.001",
+        "T1543.002",
+        "T1543.003",
+        "T1543.004",
+        "T1546",
+        "T1546.001",
+        "T1546.002",
+        "T1546.003",
+        "T1546.004",
+        "T1546.005",
+        "T1546.006",
+        "T1546.007",
+        "T1546.008",
+        "T1546.009",
+        "T1546.010",
+        "T1546.011",
+        "T1546.012",
+        "T1546.013",
+        "T1546.014",
+        "T1546.015",
+        "T1546.016",
+        "T1547",
+        "T1547.001",
+        "T1547.002",
+        "T1547.003",
+        "T1547.004",
+        "T1547.005",
+        "T1547.006",
+        "T1547.007",
+        "T1547.008",
+        "T1547.009",
+        "T1547.010",
+        "T1547.012",
+        "T1547.013",
+        "T1547.014",
+        "T1547.015",
+        "T1548",
+        "T1548.001",
+        "T1548.002",
+        "T1548.003",
+        "T1548.004",
+        "T1550",
+        "T1550.001",
+        "T1550.002",
+        "T1550.003",
+        "T1550.004",
+        "T1552",
+        "T1552.001",
+        "T1552.002",
+        "T1552.003",
+        "T1552.004",
+        "T1552.005",
+        "T1552.006",
+        "T1552.007",
+        "T1552.008",
+        "T1553",
+        "T1553.002",
+        "T1553.003",
+        "T1553.004",
+        "T1553.005",
+        "T1553.006",
+        "T1554",
+        "T1555",
+        "T1555.001",
+        "T1555.002",
+        "T1555.003",
+        "T1555.004",
+        "T1555.005",
+        "T1556",
+        "T1556.001",
+        "T1556.002",
+        "T1556.003",
+        "T1556.004",
+        "T1556.005",
+        "T1556.006",
+        "T1556.007",
+        "T1556.008",
+        "T1557",
+        "T1557.001",
+        "T1557.002",
+        "T1557.003",
+        "T1558",
+        "T1558.001",
+        "T1558.002",
+        "T1558.003",
+        "T1558.004",
+        "T1559",
+        "T1559.001",
+        "T1559.002",
+        "T1559.003",
+        "T1560",
+        "T1560.001",
+        "T1560.002",
+        "T1560.003",
+        "T1561",
+        "T1561.001",
+        "T1561.002",
+        "T1562",
+        "T1562.001",
+        "T1562.002",
+        "T1562.003",
+        "T1562.004",
+        "T1562.006",
+        "T1562.007",
+        "T1562.008",
+        "T1562.009",
+        "T1562.010",
+        "T1562.011",
+        "T1563",
+        "T1563.001",
+        "T1563.002",
+        "T1564",
+        "T1564.001",
+        "T1564.002",
+        "T1564.003",
+        "T1564.004",
+        "T1564.005",
+        "T1564.006",
+        "T1564.007",
+        "T1564.008",
+        "T1564.009",
+        "T1564.010",
+        "T1565",
+        "T1565.001",
+        "T1565.002",
+        "T1565.003",
+        "T1566",
+        "T1566.001",
+        "T1566.002",
+        "T1566.003",
+        "T1567",
+        "T1567.001",
+        "T1567.002",
+        "T1568",
+        "T1568.001",
+        "T1568.002",
+        "T1568.003",
+        "T1569.001",
+        "T1569.002",
+        "T1570",
+        "T1571",
+        "T1572",
+        "T1573",
+        "T1573.001",
+        "T1573.002",
+        "T1574",
+        "T1574.001",
+        "T1574.002",
+        "T1574.004",
+        "T1574.005",
+        "T1574.006",
+        "T1574.007",
+        "T1574.008",
+        "T1574.009",
+        "T1574.010",
+        "T1574.011",
+        "T1574.012",
+        "T1574.013",
+        "T1578",
+        "T1578.001",
+        "T1578.002",
+        "T1578.003",
+        "T1578.004",
+        "T1580",
+        "T1583",
+        "T1583.001",
+        "T1583.002",
+        "T1583.003",
+        "T1583.004",
+        "T1583.005",
+        "T1583.006",
+        "T1583.007",
+        "T1583.008",
+        "T1584",
+        "T1584.001",
+        "T1584.002",
+        "T1584.003",
+        "T1584.004",
+        "T1584.005",
+        "T1584.006",
+        "T1584.007",
+        "T1585",
+        "T1585.001",
+        "T1585.002",
+        "T1585.003",
+        "T1586",
+        "T1586.001",
+        "T1586.002",
+        "T1586.003",
+        "T1587",
+        "T1587.001",
+        "T1587.002",
+        "T1587.003",
+        "T1587.004",
+        "T1588",
+        "T1588.001",
+        "T1588.002",
+        "T1588.003",
+        "T1588.004",
+        "T1588.005",
+        "T1588.006",
+        "T1589",
+        "T1589.001",
+        "T1589.002",
+        "T1589.003",
+        "T1590",
+        "T1590.001",
+        "T1590.002",
+        "T1590.003",
+        "T1590.004",
+        "T1590.005",
+        "T1590.006",
+        "T1591",
+        "T1591.001",
+        "T1591.002",
+        "T1591.003",
+        "T1591.004",
+        "T1592",
+        "T1592.001",
+        "T1592.002",
+        "T1592.003",
+        "T1592.004",
+        "T1593",
+        "T1593.001",
+        "T1593.002",
+        "T1593.003",
+        "T1594",
+        "T1595",
+        "T1595.001",
+        "T1595.002",
+        "T1595.003",
+        "T1596",
+        "T1596.001",
+        "T1596.002",
+        "T1596.003",
+        "T1596.004",
+        "T1596.005",
+        "T1597",
+        "T1597.001",
+        "T1597.002",
+        "T1598",
+        "T1598.001",
+        "T1598.002",
+        "T1598.003",
+        "T1599",
+        "T1599.001",
+        "T1600",
+        "T1600.001",
+        "T1600.002",
+        "T1601",
+        "T1601.001",
+        "T1601.002",
+        "T1602",
+        "T1602.001",
+        "T1602.002",
+        "T1606",
+        "T1606.001",
+        "T1606.002",
+        "T1608",
+        "T1608.001",
+        "T1608.002",
+        "T1608.003",
+        "T1608.004",
+        "T1608.005",
+        "T1608.006",
+        "T1609",
+        "T1610",
+        "T1611",
+        "T1612",
+        "T1613",
+        "T1614",
+        "T1614.001",
+        "T1615",
+        "T1619",
+        "T1620",
+        "T1621",
+        "T1622",
+        "T1629.003",
+        "T1647",
+        "T1648",
+        "T1649",
+        "T1650",
+        "T1651",
+        "T1652",
+        "T1657.003"
+      ],
+      "type": "string"
+    },
+    "mitreTechniqueName": {
+      "enum": [
+        "Abuse Elevation Control Mechanism",
+        "Abuse Elevation Control Mechanism: Bypass User Account Control",
+        "Abuse Elevation Control Mechanism: Elevated Execution with Prompt",
+        "Abuse Elevation Control Mechanism: Setuid and Setgid",
+        "Abuse Elevation Control Mechanism: Sudo and Sudo Caching",
+        "Access Token Manipulation",
+        "Access Token Manipulation: Create Process with Token",
+        "Access Token Manipulation: Make and Impersonate Token",
+        "Access Token Manipulation: Parent PID Spoofing",
+        "Access Token Manipulation: SID-History Injection",
+        "Access Token Manipulation: Token Impersonation/Theft",
+        "Account Access Removal",
+        "Account Discovery",
+        "Account Discovery: Cloud Account",
+        "Account Discovery: Domain Account",
+        "Account Discovery: Email Account",
+        "Account Discovery: Local Account",
+        "Account Manipulation",
+        "Account Manipulation: Add Office 365 Global Administrator Role",
+        "Account Manipulation: Additional Cloud Credentials",
+        "Account Manipulation: Device Registration",
+        "Account Manipulation: Exchange Email Delegate Permissions",
+        "Account Manipulation: SSH Authorized Keys",
+        "Acquire Access",
+        "Acquire Infrastructure",
+        "Acquire Infrastructure: Botnet",
+        "Acquire Infrastructure: DNS Server",
+        "Acquire Infrastructure: Domains",
+        "Acquire Infrastructure: Malvertising",
+        "Acquire Infrastructure: Server",
+        "Acquire Infrastructure: Serverless",
+        "Acquire Infrastructure: Virtual Private Server",
+        "Acquire Infrastructure: Web Services",
+        "Active Scanning",
+        "Active Scanning: Scanning IP Blocks",
+        "Active Scanning: Vulnerability Scanning",
+        "Active Scanning: Wordlist Scanning",
+        "Adversary-in-the-Middle",
+        "Adversary-in-the-Middle: ARP Cache Poisoning",
+        "Adversary-in-the-Middle: DHCP Spoofing",
+        "Adversary-in-the-Middle: LLMNR/NBT-NS Poisoning and SMB Relay",
+        "Application Layer Protocol",
+        "Application Layer Protocol: DNS",
+        "Application Layer Protocol: File Transfer Protocols",
+        "Application Layer Protocol: Mail Protocols",
+        "Application Layer Protocol: Web Protocols",
+        "Application Window Discovery",
+        "Archive Collected Data",
+        "Archive Collected Data: Archive via Custom Method",
+        "Archive Collected Data: Archive via Library",
+        "Archive Collected Data: Archive via Utility",
+        "Audio Capture",
+        "Automated Collection",
+        "Automated Exfiltration",
+        "Automated Exfiltration: Traffic Duplication",
+        "BITS Jobs",
+        "Boot or Logon Autostart Execution",
+        "Boot or Logon Autostart Execution: Active Setup",
+        "Boot or Logon Autostart Execution: Authentication Package",
+        "Boot or Logon Autostart Execution: Kernel Modules and Extensions",
+        "Boot or Logon Autostart Execution: LSASS Driver",
+        "Boot or Logon Autostart Execution: Login Items",
+        "Boot or Logon Autostart Execution: Port Monitors",
+        "Boot or Logon Autostart Execution: Print Processors",
+        "Boot or Logon Autostart Execution: Re-opened Applications",
+        "Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder",
+        "Boot or Logon Autostart Execution: Security Support Provider",
+        "Boot or Logon Autostart Execution: Shortcut Modification",
+        "Boot or Logon Autostart Execution: Time Providers",
+        "Boot or Logon Autostart Execution: Winlogon Helper DLL",
+        "Boot or Logon Autostart Execution: XDG Autostart Entries",
+        "Boot or Logon Initialization Scripts",
+        "Boot or Logon Initialization Scripts: Login Hook",
+        "Boot or Logon Initialization Scripts: Logon Script (Windows)",
+        "Boot or Logon Initialization Scripts: Network Logon Script",
+        "Boot or Logon Initialization Scripts: RC Scripts",
+        "Boot or Logon Initialization Scripts: Startup Items",
+        "Browser Bookmark Discovery",
+        "Browser Extensions",
+        "Browser Session Hijacking",
+        "Brute Force",
+        "Brute Force: Credential Stuffing",
+        "Brute Force: Password Cracking",
+        "Brute Force: Password Guessing",
+        "Brute Force: Password Spraying",
+        "Build Image on Host",
+        "Clipboard Data",
+        "Cloud Administration Command",
+        "Cloud Infrastructure Discovery",
+        "Cloud Service Dashboard",
+        "Cloud Service Discovery",
+        "Cloud Storage Object Discovery",
+        "Command and Scripting Interpreter",
+        "Command and Scripting Interpreter: AppleScript",
+        "Command and Scripting Interpreter: Cloud API",
+        "Command and Scripting Interpreter: JavaScript",
+        "Command and Scripting Interpreter: Network Device CLI",
+        "Command and Scripting Interpreter: PowerShell",
+        "Command and Scripting Interpreter: Python",
+        "Command and Scripting Interpreter: Unix Shell",
+        "Command and Scripting Interpreter: Visual Basic",
+        "Command and Scripting Interpreter: Windows Command Shell",
+        "Communication Through Removable Media",
+        "Compromise Accounts",
+        "Compromise Accounts: Cloud Accounts",
+        "Compromise Accounts: Email Accounts",
+        "Compromise Accounts: Social Media Accounts",
+        "Compromise Client Software Binary",
+        "Compromise Infrastructure",
+        "Compromise Infrastructure: Botnet",
+        "Compromise Infrastructure: DNS Server",
+        "Compromise Infrastructure: Domains",
+        "Compromise Infrastructure: Server",
+        "Compromise Infrastructure: Serverless",
+        "Compromise Infrastructure: Virtual Private Server",
+        "Compromise Infrastructure: Web Services",
+        "Container Administration Command",
+        "Container and Resource Discovery",
+        "Create Account",
+        "Create Account: Cloud Account",
+        "Create Account: Domain Account",
+        "Create Account: Local Account",
+        "Create or Modify System Process",
+        "Create or Modify System Process: Launch Agent",
+        "Create or Modify System Process: Launch Daemon",
+        "Create or Modify System Process: Systemd Service",
+        "Create or Modify System Process: Windows Service",
+        "Credential Access",
+        "Credentials from Password Stores",
+        "Credentials from Password Stores: Credentials from Web Browsers",
+        "Credentials from Password Stores: Keychain",
+        "Credentials from Password Stores: Password Managers",
+        "Credentials from Password Stores: Securityd Memory",
+        "Credentials from Password Stores: Windows Credential Manager",
+        "Data Destruction",
+        "Data Encoding",
+        "Data Encoding: Non-Standard Encoding",
+        "Data Encoding: Standard Encoding",
+        "Data Encrypted for Impact",
+        "Data Manipulation",
+        "Data Manipulation: Runtime Data Manipulation",
+        "Data Manipulation: Stored Data Manipulation",
+        "Data Manipulation: Transmitted Data Manipulation",
+        "Data Obfuscation",
+        "Data Obfuscation: Junk Data",
+        "Data Obfuscation: Protocol Impersonation",
+        "Data Obfuscation: Steganography",
+        "Data Staged",
+        "Data Staged: Local Data Staging",
+        "Data Staged: Remote Data Staging",
+        "Data Transfer Size Limits",
+        "Data from Cloud Storage Object",
+        "Data from Configuration Repository",
+        "Data from Configuration Repository: Network Device Configuration Dump",
+        "Data from Configuration Repository: SNMP (MIB Dump)",
+        "Data from Information Repositories",
+        "Data from Information Repositories: Code Repositories",
+        "Data from Information Repositories: Confluence",
+        "Data from Information Repositories: Sharepoint",
+        "Data from Local System",
+        "Data from Network Shared Drive",
+        "Data from Removable Media",
+        "Debugger Evasion",
+        "Defacement",
+        "Defacement: External Defacement",
+        "Defacement: Internal Defacement",
+        "Deobfuscate/Decode Files or Information",
+        "Deploy Container",
+        "Develop Capabilities",
+        "Develop Capabilities: Code Signing Certificates",
+        "Develop Capabilities: Digital Certificates",
+        "Develop Capabilities: Exploits",
+        "Develop Capabilities: Malware",
+        "Device Driver Discovery",
+        "Direct Volume Access",
+        "Disk Wipe",
+        "Disk Wipe: Disk Content Wipe",
+        "Disk Wipe: Disk Structure Wipe",
+        "Domain Policy Modification",
+        "Domain Policy Modification: Domain Trust Modification",
+        "Domain Policy Modification: Group Policy Modification",
+        "Domain Trust Discovery",
+        "Drive-by Compromise",
+        "Dynamic Resolution",
+        "Dynamic Resolution: DNS Calculation",
+        "Dynamic Resolution: Domain Generation Algorithms",
+        "Dynamic Resolution: Fast Flux DNS",
+        "Email Collection",
+        "Email Collection: Email Forwarding Rule",
+        "Email Collection: Local Email Collection",
+        "Email Collection: Remote Email Collection",
+        "Encrypted Channel",
+        "Encrypted Channel: Asymmetric Cryptography",
+        "Encrypted Channel: Symmetric Cryptography",
+        "Endpoint Denial of Service",
+        "Endpoint Denial of Service: Application Exhaustion Flood",
+        "Endpoint Denial of Service: Application or System Exploitation",
+        "Endpoint Denial of Service: OS Exhaustion Flood",
+        "Endpoint Denial of Service: Service Exhaustion Flood",
+        "Escape to Host",
+        "Establish Accounts",
+        "Establish Accounts: Cloud Accounts",
+        "Establish Accounts: Email Accounts",
+        "Establish Accounts: Social Media Accounts",
+        "Event Triggered Execution",
+        "Event Triggered Execution: Accessibility Features",
+        "Event Triggered Execution: AppCert DLLs",
+        "Event Triggered Execution: AppInit DLLs",
+        "Event Triggered Execution: Application Shimming",
+        "Event Triggered Execution: Change Default File Association",
+        "Event Triggered Execution: Component Object Model Hijacking",
+        "Event Triggered Execution: Emond",
+        "Event Triggered Execution: Image File Execution Options Injection",
+        "Event Triggered Execution: Installer Packages",
+        "Event Triggered Execution: LC_LOAD_DYLIB Addition",
+        "Event Triggered Execution: Netsh Helper DLL",
+        "Event Triggered Execution: PowerShell Profile",
+        "Event Triggered Execution: Screensaver",
+        "Event Triggered Execution: Trap",
+        "Event Triggered Execution: Unix Shell Configuration Modification",
+        "Event Triggered Execution: Windows Management Instrumentation Event Subscription",
+        "Execution Guardrails",
+        "Execution Guardrails: Environmental Keying",
+        "Exfiltration Over Alternative Protocol",
+        "Exfiltration Over Alternative Protocol: Exfiltration Over Asymmetric Encrypted Non-C2 Protocol",
+        "Exfiltration Over Alternative Protocol: Exfiltration Over Symmetric Encrypted Non-C2 Protocol",
+        "Exfiltration Over Alternative Protocol: Exfiltration Over Unencrypted Non-C2 Protocol",
+        "Exfiltration Over C2 Channel",
+        "Exfiltration Over Other Network Medium",
+        "Exfiltration Over Other Network Medium: Exfiltration Over Bluetooth",
+        "Exfiltration Over Physical Medium",
+        "Exfiltration Over Physical Medium: Exfiltration over USB",
+        "Exfiltration Over Web Service",
+        "Exfiltration Over Web Service: Exfiltration to Cloud Storage",
+        "Exfiltration Over Web Service: Exfiltration to Code Repository",
+        "Exfiltration Over Web Service: Exfiltration to Text Storage Sites",
+        "Exploit Public-Facing Application",
+        "Exploitation for Client Execution",
+        "Exploitation for Credential Access",
+        "Exploitation for Defense Evasion",
+        "Exploitation for Privilege Escalation",
+        "Exploitation of Remote Services",
+        "External Remote Services",
+        "Fallback Channels",
+        "File and Directory Discovery",
+        "File and Directory Permissions Modification",
+        "File and Directory Permissions Modification: Linux and Mac File and Directory Permissions Modification",
+        "File and Directory Permissions Modification: Windows File and Directory Permissions Modification",
+        "Firmware Corruption",
+        "Forced Authentication",
+        "Forge Web Credentials",
+        "Forge Web Credentials: SAML Tokens",
+        "Forge Web Credentials: Web Cookies",
+        "Gather Victim Host Information",
+        "Gather Victim Host Information: Client Configurations",
+        "Gather Victim Host Information: Firmware",
+        "Gather Victim Host Information: Hardware",
+        "Gather Victim Host Information: Software",
+        "Gather Victim Identity Information",
+        "Gather Victim Identity Information: Credentials",
+        "Gather Victim Identity Information: Email Addresses",
+        "Gather Victim Identity Information: Employee Names",
+        "Gather Victim Network Information",
+        "Gather Victim Network Information: DNS",
+        "Gather Victim Network Information: Domain Properties",
+        "Gather Victim Network Information: IP Addresses",
+        "Gather Victim Network Information: Network Security Appliances",
+        "Gather Victim Network Information: Network Topology",
+        "Gather Victim Network Information: Network Trust Dependencies",
+        "Gather Victim Org Information",
+        "Gather Victim Org Information: Business Relationships",
+        "Gather Victim Org Information: Determine Physical Locations",
+        "Gather Victim Org Information: Identify Business Tempo",
+        "Gather Victim Org Information: Identify Roles",
+        "Group Policy Discovery",
+        "Hardware Additions",
+        "Hide Artifacts",
+        "Hide Artifacts: Email Hiding Rules",
+        "Hide Artifacts: Hidden File System",
+        "Hide Artifacts: Hidden Files and Directories",
+        "Hide Artifacts: Hidden Users",
+        "Hide Artifacts: Hidden Window",
+        "Hide Artifacts: NTFS File Attributes",
+        "Hide Artifacts: Process Argument Spoofing",
+        "Hide Artifacts: Resource Forking",
+        "Hide Artifacts: Run Virtual Instance",
+        "Hide Artifacts: VBA Stomping",
+        "Hijack Execution Flow",
+        "Hijack Execution Flow: COR_PROFILER",
+        "Hijack Execution Flow: DLL Search Order Hijacking",
+        "Hijack Execution Flow: DLL Side-Loading",
+        "Hijack Execution Flow: Dylib Hijacking",
+        "Hijack Execution Flow: Dynamic Linker Hijacking",
+        "Hijack Execution Flow: Executable Installer File Permissions Weakness",
+        "Hijack Execution Flow: KernelCallbackTable",
+        "Hijack Execution Flow: Path Interception by PATH Environment Variable",
+        "Hijack Execution Flow: Path Interception by Search Order Hijacking",
+        "Hijack Execution Flow: Path Interception by Unquoted Path",
+        "Hijack Execution Flow: Services File Permissions Weakness",
+        "Hijack Execution Flow: Services Registry Permissions Weakness",
+        "Impair Defenses",
+        "Impair Defenses: Disable Cloud Logs",
+        "Impair Defenses: Disable Windows Event Logging",
+        "Impair Defenses: Disable or Modify Cloud Firewall",
+        "Impair Defenses: Disable or Modify System Firewall",
+        "Impair Defenses: Disable or Modify Tools",
+        "Impair Defenses: Downgrade Attack",
+        "Impair Defenses: Impair Command History Logging",
+        "Impair Defenses: Indicator Blocking",
+        "Impair Defenses: Safe Mode Boot",
+        "Impair Defenses: Spoof Security Alerting",
+        "Implant Internal Image",
+        "Indicator Removal",
+        "Indicator Removal: Clear Command History",
+        "Indicator Removal: Clear Linux or Mac System Logs",
+        "Indicator Removal: Clear Mailbox Data",
+        "Indicator Removal: Clear Network Connection History and Configurations",
+        "Indicator Removal: Clear Persistence",
+        "Indicator Removal: Clear Windows Event Logs",
+        "Indicator Removal: File Deletion",
+        "Indicator Removal: Network Share Connection Removal",
+        "Indicator Removal: Timestomp",
+        "Indirect Command Execution",
+        "Ingress Tool Transfer",
+        "Inhibit System Recovery",
+        "Input Capture",
+        "Input Capture: Credential API Hooking",
+        "Input Capture: GUI Input Capture",
+        "Input Capture: Keylogging",
+        "Input Capture: Web Portal Capture",
+        "Inter-Process Communication",
+        "Inter-Process Communication: Component Object Model",
+        "Inter-Process Communication: Dynamic Data Exchange",
+        "Inter-Process Communication: XPC Services",
+        "Internal Spearphishing",
+        "Lateral Tool Transfer",
+        "Masquerading",
+        "Masquerading: Double File Extension",
+        "Masquerading: Invalid Code Signature",
+        "Masquerading: Masquerade File Type",
+        "Masquerading: Masquerade Task or Service",
+        "Masquerading: Match Legitimate Name or Location",
+        "Masquerading: Rename System Utilities",
+        "Masquerading: Right-to-Left Override",
+        "Masquerading: Space after Filename",
+        "Modify Authentication Process",
+        "Modify Authentication Process: Domain Controller Authentication",
+        "Modify Authentication Process: Hybrid Identity",
+        "Modify Authentication Process: Multi-Factor Authentication",
+        "Modify Authentication Process: Network Device Authentication",
+        "Modify Authentication Process: Network Provider DLL",
+        "Modify Authentication Process: Password Filter DLL",
+        "Modify Authentication Process: Pluggable Authentication Modules",
+        "Modify Authentication Process: Reversible Encryption",
+        "Modify Cloud Compute Infrastructure",
+        "Modify Cloud Compute Infrastructure: Create Cloud Instance",
+        "Modify Cloud Compute Infrastructure: Create Snapshot",
+        "Modify Cloud Compute Infrastructure: Delete Cloud Instance",
+        "Modify Cloud Compute Infrastructure: Revert Cloud Instance",
+        "Modify Registry",
+        "Modify System Image",
+        "Modify System Image: Downgrade System Image",
+        "Modify System Image: Patch System Image",
+        "Multi-Factor Authentication Request Generation",
+        "Multi-Stage Channels",
+        "Native API",
+        "Network Boundary Bridging",
+        "Network Boundary Bridging: Network Address Translation Traversal",
+        "Network Denial of Service",
+        "Network Denial of Service: Direct Network Flood",
+        "Network Denial of Service: Reflection Amplification",
+        "Network Service Scanning",
+        "Network Share Discovery",
+        "Network Sniffing",
+        "Non-Application Layer Protocol",
+        "Non-Standard Port",
+        "OS Credential Dumping",
+        "OS Credential Dumping: /etc/passwd and /etc/shadow",
+        "OS Credential Dumping: Cached Domain Credentials",
+        "OS Credential Dumping: DCSync",
+        "OS Credential Dumping: LSA Secrets",
+        "OS Credential Dumping: LSASS Memory",
+        "OS Credential Dumping: NTDS",
+        "OS Credential Dumping: Proc Filesystem",
+        "OS Credential Dumping: Security Account Manager",
+        "Obfuscated Files or Information",
+        "Obfuscated Files or Information: Binary Padding",
+        "Obfuscated Files or Information: Command Obfuscation",
+        "Obfuscated Files or Information: Compile After Delivery",
+        "Obfuscated Files or Information: Dynamic API Resolution",
+        "Obfuscated Files or Information: Embedded Payloads",
+        "Obfuscated Files or Information: Fileless Storage",
+        "Obfuscated Files or Information: HTML Smuggling",
+        "Obfuscated Files or Information: Indicator Removal from Tools",
+        "Obfuscated Files or Information: Software Packing",
+        "Obfuscated Files or Information: Steganography",
+        "Obfuscated Files or Information: Stripped Payloads",
+        "Obtain Capabilities",
+        "Obtain Capabilities: Code Signing Certificates",
+        "Obtain Capabilities: Digital Certificates",
+        "Obtain Capabilities: Exploits",
+        "Obtain Capabilities: Malware",
+        "Obtain Capabilities: Tool",
+        "Obtain Capabilities: Vulnerabilities",
+        "Office Application Startup",
+        "Office Application Startup: Add-ins",
+        "Office Application Startup: Office Template Macros",
+        "Office Application Startup: Office Test",
+        "Office Application Startup: Outlook Forms",
+        "Office Application Startup: Outlook Home Page",
+        "Office Application Startup: Outlook Rules",
+        "Password Policy Discovery",
+        "Peripheral Device Discovery",
+        "Permission Groups Discovery",
+        "Permission Groups Discovery: Cloud Groups",
+        "Permission Groups Discovery: Domain Groups",
+        "Permission Groups Discovery: Local Groups",
+        "Phishing",
+        "Phishing for Information",
+        "Phishing for Information: Spearphishing Attachment",
+        "Phishing for Information: Spearphishing Link",
+        "Phishing for Information: Spearphishing Service",
+        "Phishing: Spearphishing Attachment",
+        "Phishing: Spearphishing Link",
+        "Phishing: Spearphishing via Service",
+        "Plist File Modification",
+        "Pre-OS Boot",
+        "Pre-OS Boot: Bootkit",
+        "Pre-OS Boot: Component Firmware",
+        "Pre-OS Boot: ROMMONkit",
+        "Pre-OS Boot: System Firmware",
+        "Pre-OS Boot: TFTP Boot",
+        "Process Discovery",
+        "Process Injection",
+        "Process Injection: Asynchronous Procedure Call",
+        "Process Injection: Dynamic-link Library Injection",
+        "Process Injection: Extra Window Memory Injection",
+        "Process Injection: ListPlanting",
+        "Process Injection: Portable Executable Injection",
+        "Process Injection: Proc Memory",
+        "Process Injection: Process Doppelgänging",
+        "Process Injection: Process Hollowing",
+        "Process Injection: Ptrace System Calls",
+        "Process Injection: Thread Execution Hijacking",
+        "Process Injection: Thread Local Storage",
+        "Process Injection: VDSO Hijacking",
+        "Protocol Tunneling",
+        "Proxy",
+        "Proxy: Domain Fronting",
+        "Proxy: External Proxy",
+        "Proxy: Internal Proxy",
+        "Proxy: Multi-hop Proxy",
+        "Query Registry",
+        "Reflective Code Loading",
+        "Remote Access Software",
+        "Remote Service Session Hijacking",
+        "Remote Service Session Hijacking: RDP Hijacking",
+        "Remote Service Session Hijacking: SSH Hijacking",
+        "Remote Services",
+        "Remote Services: Cloud Services",
+        "Remote Services: Remote Desktop Protocol",
+        "Remote Services: SMB/Windows Admin Shares",
+        "Remote Services: SSH",
+        "Remote Services: VNC",
+        "Remote Services: Windows Remote Management",
+        "Remote System Discovery",
+        "Replication Through Removable Media",
+        "Resource Hijacking",
+        "Rogue Domain Controller",
+        "Rootkit",
+        "Scheduled Task/Job",
+        "Scheduled Task/Job: At",
+        "Scheduled Task/Job: Container Orchestration Job",
+        "Scheduled Task/Job: Cron",
+        "Scheduled Task/Job: Scheduled Task",
+        "Scheduled Task/Job: Systemd Timers",
+        "Scheduled Transfer",
+        "Screen Capture",
+        "Search Closed Sources",
+        "Search Closed Sources: Purchase Technical Data",
+        "Search Closed Sources: Threat Intel Vendors",
+        "Search Open Technical Databases",
+        "Search Open Technical Databases: CDNs",
+        "Search Open Technical Databases: DNS/Passive DNS",
+        "Search Open Technical Databases: Digital Certificates",
+        "Search Open Technical Databases: Scan Databases",
+        "Search Open Technical Databases: WHOIS",
+        "Search Open Websites/Domains",
+        "Search Open Websites/Domains: Code Repositories",
+        "Search Open Websites/Domains: Search Engines",
+        "Search Open Websites/Domains: Social Media",
+        "Search Victim-Owned Websites",
+        "Server Software Component",
+        "Server Software Component: IIS Components",
+        "Server Software Component: SQL Stored Procedures",
+        "Server Software Component: Terminal Services DLL",
+        "Server Software Component: Transport Agent",
+        "Server Software Component: Web Shell",
+        "Serverless Execution",
+        "Service Stop",
+        "Shared Modules",
+        "Software Deployment Tools",
+        "Software Discovery",
+        "Software Discovery: Security Software Discovery",
+        "Stage Capabilities",
+        "Stage Capabilities: Drive-by Target",
+        "Stage Capabilities: Install Digital Certificate",
+        "Stage Capabilities: Link Target",
+        "Stage Capabilities: SEO Poisoning",
+        "Stage Capabilities: Upload Malware",
+        "Stage Capabilities: Upload Tool",
+        "Steal Application Access Token",
+        "Steal Web Session Cookie",
+        "Steal or Forge Authentication Certificates",
+        "Steal or Forge Kerberos Tickets",
+        "Steal or Forge Kerberos Tickets: AS-REP Roasting",
+        "Steal or Forge Kerberos Tickets: Golden Ticket",
+        "Steal or Forge Kerberos Tickets: Kerberoasting",
+        "Steal or Forge Kerberos Tickets: Silver Ticket",
+        "Subvert Trust Controls",
+        "Subvert Trust Controls: Code Signing",
+        "Subvert Trust Controls: Code Signing Policy Modification",
+        "Subvert Trust Controls: Install Root Certificate",
+        "Subvert Trust Controls: Mark-of-the-Web Bypass",
+        "Subvert Trust Controls: SIP and Trust Provider Hijacking",
+        "Supply Chain Compromise",
+        "Supply Chain Compromise: Compromise Hardware Supply Chain",
+        "Supply Chain Compromise: Compromise Software Dependencies and Development Tools",
+        "Supply Chain Compromise: Compromise Software Supply Chain",
+        "System Binary Proxy Execution",
+        "System Binary Proxy Execution: CMSTP",
+        "System Binary Proxy Execution: Compiled HTML File",
+        "System Binary Proxy Execution: Control Panel",
+        "System Binary Proxy Execution: InstallUtil",
+        "System Binary Proxy Execution: MMC",
+        "System Binary Proxy Execution: Mavinject",
+        "System Binary Proxy Execution: Mshta",
+        "System Binary Proxy Execution: Msiexec",
+        "System Binary Proxy Execution: Odbcconf",
+        "System Binary Proxy Execution: Regsvcs/Regasm",
+        "System Binary Proxy Execution: Regsvr32",
+        "System Binary Proxy Execution: Rundll32",
+        "System Binary Proxy Execution: Verclsid",
+        "System Information Discovery",
+        "System Location Discovery",
+        "System Location Discovery: System Language Discovery",
+        "System Network Configuration Discovery",
+        "System Network Configuration Discovery: Internet Connection Discovery",
+        "System Network Connections Discovery",
+        "System Owner/User Discovery",
+        "System Script Proxy Execution",
+        "System Script Proxy Execution: PubPrn",
+        "System Service Discovery",
+        "System Services: Launchctl",
+        "System Services: Service Execution",
+        "System Shutdown/Reboot",
+        "System Time Discovery",
+        "Taint Shared Content",
+        "Template Injection",
+        "Traffic Signaling",
+        "Traffic Signaling: Port Knocking",
+        "Traffic Signaling: Socket Filters",
+        "Transfer Data to Cloud Account",
+        "Trusted Developer Utilities Proxy Execution",
+        "Trusted Developer Utilities Proxy Execution: MSBuild",
+        "Trusted Relationship",
+        "Unsecured Credentials",
+        "Unsecured Credentials: Bash History",
+        "Unsecured Credentials: Chat Messages",
+        "Unsecured Credentials: Cloud Instance Metadata API",
+        "Unsecured Credentials: Container API",
+        "Unsecured Credentials: Credentials In Files",
+        "Unsecured Credentials: Credentials in Registry",
+        "Unsecured Credentials: Group Policy Preferences",
+        "Unsecured Credentials: Private Keys",
+        "Unused/Unsupported Cloud Regions",
+        "Use Alternate Authentication Material",
+        "Use Alternate Authentication Material: Application Access Token",
+        "Use Alternate Authentication Material: Pass the Hash",
+        "Use Alternate Authentication Material: Pass the Ticket",
+        "Use Alternate Authentication Material: Web Session Cookie",
+        "User Execution",
+        "User Execution: Malicious File",
+        "User Execution: Malicious Image",
+        "User Execution: Malicious Link",
+        "Valid Accounts",
+        "Valid Accounts: Cloud Accounts",
+        "Valid Accounts: Default Accounts",
+        "Valid Accounts: Domain Accounts",
+        "Valid Accounts: Local Accounts",
+        "Video Capture",
+        "Virtualization/Sandbox Evasion",
+        "Virtualization/Sandbox Evasion: System Checks",
+        "Virtualization/Sandbox Evasion: Time Based Evasion",
+        "Virtualization/Sandbox Evasion: User Activity Based Checks",
+        "Weaken Encryption",
+        "Weaken Encryption: Disable Crypto Hardware",
+        "Weaken Encryption: Reduce Key Space",
+        "Web Service",
+        "Web Service: Bidirectional Communication",
+        "Web Service: Dead Drop Resolver",
+        "Web Service: One-Way Communication",
+        "Windows Management Instrumentation",
+        "XSL Script Processing"
+      ],
+      "type": "string"
+    },
+    "networkAddress": {
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "addressType",
+            "address",
+            "name"
+          ],
+          "title": "DeprecatedNetworkAddressType"
+        },
+        {
+          "required": [
+            "dns",
+            "name"
+          ],
+          "title": "DNSNetworkAddress"
+        },
+        {
+          "required": [
+            "url",
+            "name"
+          ],
+          "title": "URLNetworkAddress"
+        },
+        {
+          "required": [
+            "ipAddress",
+            "name"
+          ],
+          "title": "IPAddressNetworkAddress"
+        }
+      ],
+      "properties": {
+        "address": {
+          "deprecated": true,
+          "type": "string"
+        },
+        "addressType": {
+          "$ref": "#/$defs/networkAddressType",
+          "deprecated": true
+        },
+        "cloudPlatform": {
+          "$ref": "#/$defs/cloudPlatform"
+        },
+        "dns": {
+          "type": "string"
+        },
+        "ipAddress": {
+          "anyOf": [
+            {
+              "format": "ipv4",
+              "type": "string"
+            },
+            {
+              "format": "ipv6",
+              "type": "string"
+            }
+          ],
+          "type": "string"
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "networkAddressType": {
+      "enum": [
+        "IPV4",
+        "IPV6",
+        "DNS",
+        "URL"
+      ],
+      "type": "string"
+    },
+    "networkInterface": {
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "name"
+          ],
+          "title": "networkInterfaceName"
+        },
+        {
+          "required": [
+            "macAddress"
+          ],
+          "title": "networkInterfaceMacAddress"
+        },
+        {
+          "required": [
+            "networkAddresses"
+          ],
+          "title": "networkInterfaceNetworkAddresses"
+        }
+      ],
+      "properties": {
+        "macAddress": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "networkAddresses": {
+          "items": {
+            "$ref": "#/$defs/networkAddress"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "oSInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "osFamily": {
+          "$ref": "#/$defs/operatingSystem"
+        },
+        "technology": {
+          "$ref": "#/$defs/technology"
+        }
+      },
+      "required": [
+        "osFamily"
+      ],
+      "type": "object"
+    },
+    "operatingSystem": {
+      "enum": [
+        "Linux",
+        "Windows",
+        "Unknown",
+        "MacOS"
+      ],
+      "type": "string"
     },
     "protocol": {
       "enum": [
@@ -298,8 +2343,174 @@
       ],
       "type": "string"
     },
-    "targetComponent": {
+    "repository": {
       "additionalProperties": false,
+      "properties": {
+        "isArchived": {
+          "type": "boolean"
+        },
+        "isDisabled": {
+          "type": "boolean"
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "url": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "url"
+      ],
+      "type": "object"
+    },
+    "sastFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "commitHash": {
+          "type": "string"
+        },
+        "filename": {
+          "type": "string"
+        },
+        "lineNumbers": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "sastFindingV2": {
+      "additionalProperties": false,
+      "properties": {
+        "codeLibraryLanguages": {
+          "items": {
+            "$ref": "#/$defs/SASTCodeLibraryLanguage"
+          },
+          "type": "array"
+        },
+        "commitHash": {
+          "type": "string"
+        },
+        "commitURL": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "endColumn": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "endLine": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "externalFindingLink": {
+          "type": "string"
+        },
+        "filePath": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "snippet": {
+          "type": "string"
+        },
+        "startColumn": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "startLine": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "weaknesses": {
+          "items": {
+            "pattern": "^CWE-\\d+$",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "severity"
+      ],
+      "type": "object"
+    },
+    "scaCodeLibraryLanguage": {
+      "enum": [
+        "C#",
+        "Golang",
+        "Java",
+        "Javascript",
+        "PHP",
+        "Python",
+        "Ruby",
+        "Rust",
+        "Swift"
+      ],
+      "type": "string"
+    },
+    "scaFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "codeLanguage": {
+          "$ref": "#/$defs/scaCodeLibraryLanguage"
+        },
+        "filePath": {
+          "type": "string"
+        },
+        "reachability": {
+          "$ref": "#/$defs/vulnerabilityReachability"
+        }
+      },
+      "type": "object"
+    },
+    "severity": {
+      "enum": [
+        "None",
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "Fail",
+        "Pass",
+        "AssessmentError",
+        "NotAssessed",
+        "Rejected"
+      ],
+      "type": "string"
+    },
+    "targetComponent": {
       "oneOf": [
         {
           "additionalProperties": false,
@@ -311,7 +2522,7 @@
           "required": [
             "library"
           ],
-          "title": "targetComponentLibrary"
+          "title": "TargetComponentLibrary"
         },
         {
           "additionalProperties": false,
@@ -323,10 +2534,180 @@
           "required": [
             "product"
           ],
-          "title": "targetComponentProduct"
+          "title": "TargetComponentProduct"
         }
       ],
       "type": "object"
+    },
+    "technology": {
+      "additionalProperties": false,
+      "properties": {
+        "edition": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "techId": {
+          "type": "integer"
+        },
+        "version": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "techId"
+      ],
+      "type": "object"
+    },
+    "vcs": {
+      "enum": [
+        "AzureDevOps",
+        "BitbucketCloud",
+        "BitbucketDataCenter",
+        "GitHub",
+        "GitLab",
+        "Terraform"
+      ],
+      "type": "string"
+    },
+    "vulnerabilityFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "detailedName": {
+          "deprecated": true,
+          "type": "string"
+        },
+        "externalDetectionSource": {
+          "$ref": "#/$defs/detectionMethod"
+        },
+        "externalFindingLink": {
+          "type": "string"
+        },
+        "fixedVersion": {
+          "deprecated": true,
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "originalObject": {
+          "type": "object"
+        },
+        "policyReference": {
+          "$ref": "#/$defs/vulnerabilityFindingPolicyReference"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "scaFinding": {
+          "$ref": "#/$defs/scaFinding"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "source": {
+          "deprecated": true,
+          "type": "string"
+        },
+        "targetComponent": {
+          "$ref": "#/$defs/targetComponent"
+        },
+        "validatedAtRuntime": {
+          "type": "boolean"
+        },
+        "version": {
+          "deprecated": true,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "vulnerabilityFindingPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "policyId": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        }
+      },
+      "required": [
+        "policyId",
+        "name",
+        "severity"
+      ],
+      "type": "object"
+    },
+    "vulnerabilityFindingPolicyReference": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence": {
+          "type": "string"
+        },
+        "firstDetectedAt": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "policyId": {
+          "type": "string"
+        },
+        "sourceUrl": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/vulnerabilityFindingPolicyStatus"
+        },
+        "violationId": {
+          "type": "string"
+        },
+        "violationSeverity": {
+          "$ref": "#/$defs/severity"
+        }
+      },
+      "required": [
+        "policyId",
+        "status",
+        "firstDetectedAt"
+      ],
+      "type": "object"
+    },
+    "vulnerabilityFindingPolicyStatus": {
+      "enum": [
+        "Open",
+        "Resolved",
+        "InProgress"
+      ],
+      "type": "string"
+    },
+    "vulnerabilityReachability": {
+      "enum": [
+        "Unsupported",
+        "Unknown",
+        "NotReachable",
+        "Reachable"
+      ],
+      "type": "string"
     },
     "vulnerableLibrary": {
       "additionalProperties": false,
@@ -355,94 +2736,73 @@
         "name": {
           "type": "string"
         },
+        "packageManager": {
+          "$ref": "#/$defs/linuxPackageManager"
+        },
         "version": {
           "type": "string"
         }
       },
       "type": "object"
     },
-    "vulnerabilityFinding": {
-      "type": "object",
+    "webAppVulnerabilityFinding": {
       "additionalProperties": false,
-      "required": [
-        "name"
-      ],
       "properties": {
         "description": {
           "type": "string"
         },
         "detailedName": {
-          "deprecated": true,
           "type": "string"
-        },
-        "externalDetectionSource": {
-          "$ref": "#/$defs/detectionMethod"
         },
         "externalFindingLink": {
-          "type": "string"
-        },
-        "fixedVersion": {
-          "deprecated": true,
           "type": "string"
         },
         "id": {
           "type": "string"
         },
         "name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "originalObject": {
-          "type": "object"
-        },
-        "policyReference": {
-          "$ref": "#/$defs/vulnerabilityFindingPolicyReference"
+          "type": "string"
         },
         "remediation": {
           "type": "string"
+        },
+        "sastFinding": {
+          "$ref": "#/$defs/sastFinding"
         },
         "severity": {
           "$ref": "#/$defs/severity"
         },
         "source": {
-          "type": "string",
-          "deprecated": true
-        },
-        "targetComponent": {
-          "$ref": "#/$defs/targetComponent"
-        },
-        "validatedAtRuntime": {
-          "type": "boolean"
-        },
-        "version": {
           "deprecated": true,
           "type": "string"
         }
-      }
-    },
-    "vulnerabilityFindingPolicyReference": {
-      "type": "object",
-      "additionalProperties": false,
+      },
       "required": [
-        "policyId",
-        "status",
-        "firstDetectedAt"
+        "name",
+        "severity"
       ],
-      "properties": {
-        "firstDetectedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "policyId": {
-          "type": "string"
-        },
-        "sourceUrl": {
-          "type": "string"
-        },
-        "violationId": {
-          "type": "string"
-        }
-      }
+      "type": "object"
     }
-  }
+  },
+  "$id": "https://wiz.io/ingestionmodel.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "dataSources": {
+      "items": {
+        "$ref": "#/$defs/dataSource"
+      },
+      "type": "array"
+    },
+    "integrationId": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "integrationId",
+    "dataSources"
+  ],
+  "title": "Wiz Ingestion Model",
+  "type": "object"
 }

@@ -53,6 +53,20 @@ python sarif_to_wiz_converter.py \
   --integration-id my-org-sarif-scanner
 ```
 
+### With Repository Information (repositoryBranch Asset Type)
+
+Creates `repositoryBranch` assets instead of `virtualMachine` assets:
+
+```bash
+python sarif_to_wiz_converter.py \
+  --input path/to/scan.sarif \
+  --output path/to/scan.wiz.json \
+  --repository-name "my-app" \
+  --repository-url "https://github.com/org/my-app"
+```
+
+**Note**: Both `--repository-name` and `--repository-url` must be specified together. Omitting both will use the default `virtualMachine` asset type.
+
 ### Custom Schema Paths
 
 ```bash
@@ -70,6 +84,47 @@ python sarif_to_wiz_converter.py \
   --input scan.sarif \
   --output scan.wiz.json \
   --verbose
+```
+
+## Asset Types
+
+The converter supports two asset types depending on your use case:
+
+### virtualMachine (Default)
+Used when repository information is not provided. Best for generic finding sources.
+
+```json
+{
+  "details": {
+    "virtualMachine": {
+      "assetId": "package.json",
+      "name": "package.json",
+      "hostname": "package.json",
+      "firstSeen": "2026-01-26T20:36:15Z"
+    }
+  }
+}
+```
+
+### repositoryBranch
+Used when `--repository-name` and `--repository-url` are provided. Best for code scanning results linked to repositories.
+
+```json
+{
+  "details": {
+    "repositoryBranch": {
+      "assetId": "package.json",
+      "assetName": "package.json",
+      "branchName": "main",
+      "repository": {
+        "name": "my-app",
+        "url": "https://github.com/org/my-app"
+      },
+      "vcs": "GitHub",
+      "firstSeen": "2026-01-26T20:36:29Z"
+    }
+  }
+}
 ```
 
 ## CI/CD Integration Examples
@@ -100,7 +155,9 @@ jobs:
           python sarif_to_wiz_converter.py \
             --input-dir ./sarif-results \
             --output-dir ./wiz-results \
-            --integration-id github-actions-scan
+            --integration-id github-actions-scan \
+            --repository-name ${{ github.repository }} \
+            --repository-url ${{ github.server_url }}/${{ github.repository }}
       
       - name: Upload Wiz format results
         uses: actions/upload-artifact@v3
