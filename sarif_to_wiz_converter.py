@@ -260,7 +260,7 @@ class SARIFtoWizConverter:
             "name": f"{rule_id}",
             "description": message_text,
             "severity": severity,
-            "externalDetectionSource": "SASTScan"
+            "externalDetectionSource": "ThirdPartyAgent"
         }
 
         # Add rule reference if available
