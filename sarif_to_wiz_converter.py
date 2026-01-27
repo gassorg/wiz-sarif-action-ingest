@@ -267,6 +267,20 @@ class SARIFtoWizConverter:
         if rule_id:
             finding["id"] = rule_id
 
+        # Extract target component from URI in locations
+        locations = result.get("locations", [])
+        if locations:
+            physical_location = locations[0].get("physicalLocation", {})
+            artifact_location = physical_location.get("artifactLocation", {})
+            uri = artifact_location.get("uri")
+            if uri:
+                # Create targetComponent as a library object with filePath
+                finding["targetComponent"] = {
+                    "library": {
+                        "filePath": uri
+                    }
+                }
+
         # Add any additional info
         if result.get("locations"):
             locations_str = json.dumps(result["locations"])
