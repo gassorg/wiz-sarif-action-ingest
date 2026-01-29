@@ -142,8 +142,14 @@ class SARIFtoWizConverter:
 
         tool_name = run.get("tool", {}).get("driver", {}).get("name", "unknown-tool")
 
+        # Generate data source ID based on repository name if available, otherwise use tool name
+        if self.repository_name:
+            data_source_id = f"{self.repository_name}-run-{run_idx}"
+        else:
+            data_source_id = f"{tool_name}-run-{run_idx}"
+
         data_source = {
-            "id": f"{tool_name}-run-{run_idx}",
+            "id": data_source_id,
             "analysisDate": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "assets": []
         }
