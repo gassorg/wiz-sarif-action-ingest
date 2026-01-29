@@ -256,6 +256,13 @@ class SARIFtoWizConverter:
         level = result.get("level", "warning")
         severity = self._map_severity(level)
 
+        # Map fixed version
+        properties = result.get("properties", {})
+        if not properties.get("fixedVersion").lower() == "no fix available":
+            fix_version = properties.get("fixedVersion")
+        else:
+            fix_version = ''
+
         finding = {
             "name": f"{rule_id}",
             "description": message_text,
@@ -267,17 +274,21 @@ class SARIFtoWizConverter:
         if rule_id:
             finding["id"] = rule_id
 
-        # Extract target component from URI in locations
+        # Extract file path and location information from SARIF
         locations = result.get("locations", [])
         if locations:
             physical_location = locations[0].get("physicalLocation", {})
             artifact_location = physical_location.get("artifactLocation", {})
             uri = artifact_location.get("uri")
+            
+            # Populate targetComponent with the file URI
+            # Note: scaFinding.filePath is deprecated when targetComponent is set
             if uri:
-                # Create targetComponent as a library object with filePath
                 finding["targetComponent"] = {
                     "library": {
-                        "filePath": uri
+                        "filePath": uri,
+                        "name": uri,
+                        "fixedVersion": fix_version
                     }
                 }
 
