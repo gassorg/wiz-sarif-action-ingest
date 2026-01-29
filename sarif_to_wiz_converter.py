@@ -21,6 +21,7 @@ from uuid import uuid4
 
 import jsonschema
 from jsonschema import Draft4Validator, ValidationError
+from mapping_engine import MappingEngine
 
 
 # Configure logging
@@ -83,14 +84,16 @@ class SARIFtoWizConverter:
         wiz_schema: SchemaValidator,
         integration_id: str = "sarif-integration",
         repository_name: Optional[str] = None,
-        repository_url: Optional[str] = None
+        repository_url: Optional[str] = None,
+        mapping_engine: Optional[MappingEngine] = None
     ):
-        """Initialize converter with schema validators."""
+        """Initialize converter with schema validators and optional mapping engine."""
         self.sarif_validator = sarif_schema
         self.wiz_validator = wiz_schema
         self.integration_id = integration_id
         self.repository_name = repository_name
         self.repository_url = repository_url
+        self.mapping_engine = mapping_engine
 
     def convert(self, sarif_doc: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -244,7 +247,63 @@ class SARIFtoWizConverter:
     def _extract_vulnerability_finding(
         self, result: Dict[str, Any], result_idx: int
     ) -> Dict[str, Any]:
-        """Extract vulnerability finding from SARIF result."""
+        """Extract vulnerability finding from SARIF result using field mappings."""
+        
+        # If mapping engine is available, use it for consistent extraction
+        if self.mapping_engine:
+            return self._extract_with_mappings(result, result_idx)
+        
+        # Fallback to direct extraction (backward compatibility)
+        return self._extract_direct(result, result_idx)
+
+    def _extract_with_mappings(
+        self, result: Dict[str, Any], result_idx: int
+    ) -> Dict[str, Any]:
+        """Extract finding using the mapping engine."""
+        finding = {}
+        engine = self.mapping_engine
+
+        # Apply finding-level mappings
+        for mapping in engine.get_field_mappings("finding_level"):
+            field_path, value = engine.apply_mapping(result, mapping)
+            if value is not None:
+                engine.set_nested_field(finding, field_path, value)
+
+        # Apply target component mappings
+        target_component = {}
+        for mapping in engine.get_field_mappings("target_component"):
+            field_path, value = engine.apply_mapping(result, mapping)
+            if value is not None:
+                # Store temporary for nested structure creation
+                engine.set_nested_field(target_component, field_path, value)
+
+        # Only add targetComponent if we have extracted data
+        if target_component:
+            engine.set_nested_field(finding, "targetComponent", target_component.get("targetComponent", {}))
+
+        # Apply optional field mappings
+        for mapping in engine.get_field_mappings("optional_fields"):
+            field_path, value = engine.apply_mapping(result, mapping)
+            if value is not None:
+                engine.set_nested_field(finding, field_path, value)
+
+        # Apply metadata mappings
+        for mapping in engine.get_field_mappings("metadata"):
+            if mapping.get("wiz_field") == "originalObject" and mapping.get("enabled"):
+                locations = result.get("locations", [])
+                rule_index = result.get("ruleIndex", -1)
+                if locations:
+                    finding["originalObject"] = {
+                        "locations": locations,
+                        "ruleIndex": rule_index
+                    }
+
+        return finding
+
+    def _extract_direct(
+        self, result: Dict[str, Any], result_idx: int
+    ) -> Dict[str, Any]:
+        """Direct extraction without mapping engine (backward compatibility)."""
         message = result.get("message", {})
         message_text = message.get("text", "")
 
@@ -328,17 +387,29 @@ class PipelineProcessor:
         wiz_schema_path: Path,
         integration_id: str = "sarif-integration",
         repository_name: Optional[str] = None,
-        repository_url: Optional[str] = None
+        repository_url: Optional[str] = None,
+        mapping_config_path: Optional[Path] = None
     ):
-        """Initialize processor with schema validators."""
+        """Initialize processor with schema validators and optional mapping engine."""
         self.sarif_validator = SchemaValidator(sarif_schema_path)
         self.wiz_validator = SchemaValidator(wiz_schema_path)
+        
+        # Initialize mapping engine if config provided
+        self.mapping_engine = None
+        if mapping_config_path:
+            try:
+                self.mapping_engine = MappingEngine(mapping_config_path)
+                logger.info(f"Loaded field mappings from: {mapping_config_path}")
+            except Exception as e:
+                logger.warning(f"Failed to load mapping config: {e}. Using defaults.")
+        
         self.converter = SARIFtoWizConverter(
             self.sarif_validator,
             self.wiz_validator,
             integration_id,
             repository_name,
-            repository_url
+            repository_url,
+            self.mapping_engine
         )
 
     def process_file(self, input_path: Path, output_path: Path) -> bool:
@@ -503,6 +574,12 @@ Examples:
         help="Path to Wiz schema (default: wiz-vuln-schema.json in same dir)"
     )
     parser.add_argument(
+        "--mapping-config",
+        type=Path,
+        default=Path(__file__).parent / "field_mappings.json",
+        help="Path to field mapping configuration (default: field_mappings.json in same dir)"
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Enable verbose logging"
@@ -543,7 +620,8 @@ Examples:
             args.wiz_schema,
             args.integration_id,
             args.repository_name,
-            args.repository_url
+            args.repository_url,
+            args.mapping_config
         )
     except Exception as e:
         logger.error(f"Failed to initialize processor: {e}")

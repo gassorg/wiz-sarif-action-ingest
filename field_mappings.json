@@ -1,0 +1,135 @@
+{
+  "description": "Field mapping configuration from SARIF to Wiz vulnerability findings",
+  "version": "1.0",
+  "sarif_to_wiz_mappings": {
+    "finding_level": {
+      "description": "Top-level finding fields that map from SARIF result properties",
+      "mappings": [
+        {
+          "wiz_field": "name",
+          "source": "sarif_result",
+          "sarif_path": "ruleId",
+          "default": "unnamed-finding",
+          "enabled": true,
+          "description": "Vulnerability name from SARIF rule ID"
+        },
+        {
+          "wiz_field": "description",
+          "source": "sarif_result",
+          "sarif_path": "message.text",
+          "default": "",
+          "enabled": true,
+          "description": "Description from SARIF message text"
+        },
+        {
+          "wiz_field": "severity",
+          "source": "sarif_result",
+          "sarif_path": "level",
+          "transform": "map_severity",
+          "default": "Medium",
+          "enabled": true,
+          "description": "Severity mapped from SARIF level (none/note/warning/error)"
+        },
+        {
+          "wiz_field": "id",
+          "source": "sarif_result",
+          "sarif_path": "ruleId",
+          "enabled": true,
+          "description": "Unique identifier for the finding"
+        },
+        {
+          "wiz_field": "externalDetectionSource",
+          "source": "constant",
+          "value": "ThirdPartyAgent",
+          "enabled": true,
+          "description": "Always set to ThirdPartyAgent for SARIF imports"
+        }
+      ]
+    },
+    "target_component": {
+      "description": "Target component library details",
+      "enabled": true,
+      "mappings": [
+        {
+          "wiz_field": "targetComponent.library.filePath",
+          "source": "sarif_result",
+          "sarif_path": "locations[0].physicalLocation.artifactLocation.uri",
+          "enabled": true,
+          "description": "File path from SARIF location URI"
+        },
+        {
+          "wiz_field": "targetComponent.library.name",
+          "source": "sarif_result",
+          "sarif_path": "locations[0].physicalLocation.artifactLocation.uri",
+          "enabled": true,
+          "description": "Component name (same as URI)"
+        },
+        {
+          "wiz_field": "targetComponent.library.fixedVersion",
+          "source": "sarif_result",
+          "sarif_path": "properties.fixedVersion",
+          "transform": "clean_fixed_version",
+          "enabled": true,
+          "description": "Fixed version from properties, empty if 'no fix available'"
+        }
+      ]
+    },
+    "optional_fields": {
+      "description": "Optional fields that can be enabled/disabled",
+      "mappings": [
+        {
+          "wiz_field": "remediation",
+          "source": "sarif_result",
+          "sarif_path": "properties.fixedVersion",
+          "transform": "format_remediation",
+          "enabled": false,
+          "description": "Remediation guidance (disabled by default)"
+        },
+        {
+          "wiz_field": "cweId",
+          "source": "sarif_result",
+          "sarif_path": "properties.cweId",
+          "enabled": false,
+          "description": "CWE identifier if available"
+        },
+        {
+          "wiz_field": "cvssScore",
+          "source": "sarif_result",
+          "sarif_path": "properties.cvssScore",
+          "enabled": false,
+          "description": "CVSS score if available"
+        }
+      ]
+    },
+    "metadata": {
+      "description": "Metadata fields in findings",
+      "mappings": [
+        {
+          "wiz_field": "originalObject",
+          "source": "sarif_result",
+          "enabled": true,
+          "description": "Store original SARIF location and rule index for debugging"
+        }
+      ]
+    }
+  },
+  "transformations": {
+    "map_severity": {
+      "description": "Maps SARIF level to Wiz severity",
+      "mappings": {
+        "none": "None",
+        "note": "Low",
+        "warning": "Medium",
+        "error": "High"
+      }
+    },
+    "clean_fixed_version": {
+      "description": "Cleans fixed version field, returns empty string if 'no fix available'",
+      "returns_empty_if": "no fix available"
+    },
+    "format_remediation": {
+      "description": "Formats fixed version into a remediation string",
+      "template": "Update to version: {value}"
+    }
+  }
+}
