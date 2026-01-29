@@ -67,7 +67,7 @@ class SchemaValidator:
         """
         try:
             self.validator.validate(document)
-            logger.debug(f"✓ {name} is valid")
+            logger.info(f"✓ {name} validation passed")
             return True
         except ValidationError as e:
             logger.error(f"✗ {name} validation failed: {e.message}")
