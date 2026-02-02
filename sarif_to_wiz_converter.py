@@ -109,7 +109,7 @@ class SARIFtoWizConverter:
         self.sarif_validator.validate(sarif_doc, "SARIF input")
 
         wiz_doc = {
-            "integrationId": self.integration_id,
+            "integrationId": "55c176cc-d155-43a2-98ed-aa56873a1ca1", #hardcoded, likely need to update this to tenant specific if needed
             "dataSources": []
         }
 
@@ -144,7 +144,7 @@ class SARIFtoWizConverter:
 
         # Generate data source ID based on repository name if available, otherwise use tool name
         if self.repository_name:
-            data_source_id = f"{self.repository_name}-run-{run_idx}"
+            data_source_id = f"{self.repository_name}"
         else:
             data_source_id = f"{tool_name}-run-{run_idx}"
 
