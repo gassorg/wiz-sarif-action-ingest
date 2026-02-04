@@ -13,6 +13,7 @@ Usage:
 import argparse
 import json
 import logging
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -85,7 +86,8 @@ class SARIFtoWizConverter:
         integration_id: str = "sarif-integration",
         repository_name: Optional[str] = None,
         repository_url: Optional[str] = None,
-        mapping_engine: Optional[MappingEngine] = None
+        mapping_engine: Optional[MappingEngine] = None,
+        cve_only: bool = False
     ):
         """Initialize converter with schema validators and optional mapping engine."""
         self.sarif_validator = sarif_schema
@@ -94,6 +96,8 @@ class SARIFtoWizConverter:
         self.repository_name = repository_name
         self.repository_url = repository_url
         self.mapping_engine = mapping_engine
+        self.cve_only = cve_only
+        self.cve_pattern = re.compile(r'CVE-\d{4}-\d{4,}', re.IGNORECASE)
 
     def convert(self, sarif_doc: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -156,8 +160,14 @@ class SARIFtoWizConverter:
 
         # Group results by asset (file/URI)
         assets_map: Dict[str, Dict[str, Any]] = {}
+        filtered_count = 0
 
         for result_idx, result in enumerate(results):
+            # Check CVE-only filter
+            if self.cve_only and not self._is_cve_finding(result):
+                filtered_count += 1
+                continue
+            
             asset_id, asset_details, finding = self._convert_result(
                 result, result_idx, tool_name
             )
@@ -170,6 +180,10 @@ class SARIFtoWizConverter:
                 }
 
             assets_map[asset_id]["vulnerabilityFindings"].append(finding)
+        
+        # Log filtered findings
+        if self.cve_only and filtered_count > 0:
+            logger.info(f"CVE-only filter: Excluded {filtered_count} non-CVE findings")
 
         data_source["assets"] = list(assets_map.values())
         return data_source
@@ -304,6 +318,15 @@ class SARIFtoWizConverter:
                         "ruleIndex": rule_index
                     }
 
+        # When CVE-only mode is enabled, simplify the finding name and id to just the CVE identifier
+        if self.cve_only and finding.get("name"):
+            cve_match = self.cve_pattern.search(finding["name"])
+            if cve_match:
+                cve_identifier = cve_match.group(0)
+                finding["name"] = cve_identifier
+                if "id" in finding:
+                    finding["id"] = cve_identifier
+
         return finding
 
     def _extract_direct(
@@ -328,8 +351,15 @@ class SARIFtoWizConverter:
         else:
             fix_version = ''
 
+        # When CVE-only mode is enabled, extract just the CVE identifier
+        finding_name = rule_id
+        if self.cve_only and rule_id:
+            cve_match = self.cve_pattern.search(rule_id)
+            if cve_match:
+                finding_name = cve_match.group(0)
+
         finding = {
-            "name": f"{rule_id}",
+            "name": finding_name,
             "description": message_text,
             "severity": severity,
             "externalDetectionSource": "ThirdPartyAgent"
@@ -337,7 +367,7 @@ class SARIFtoWizConverter:
 
         # Add rule reference if available
         if rule_id:
-            finding["id"] = rule_id
+            finding["id"] = finding_name if self.cve_only else rule_id
 
         # Extract file path and location information from SARIF
         locations = result.get("locations", [])
@@ -383,6 +413,40 @@ class SARIFtoWizConverter:
         }
         return mapping.get(sarif_level.lower(), "Medium")
 
+    def _is_cve_finding(self, result: Dict[str, Any]) -> bool:
+        """
+        Check if a SARIF result is CVE-related.
+        
+        Looks for CVE pattern in:
+        - ruleId
+        - message text
+        - properties
+        
+        Args:
+            result: SARIF result object
+            
+        Returns:
+            True if CVE-related, False otherwise
+        """
+        # Check ruleId
+        rule_id = result.get("ruleId", "")
+        if self.cve_pattern.search(rule_id):
+            return True
+        
+        # Check message text
+        message = result.get("message", {})
+        message_text = message.get("text", "")
+        if self.cve_pattern.search(message_text):
+            return True
+        
+        # Check in properties if available
+        properties = result.get("properties", {})
+        for key, value in properties.items():
+            if isinstance(value, str) and self.cve_pattern.search(value):
+                return True
+        
+        return False
+
 
 class PipelineProcessor:
     """Processes SARIF files for CI pipeline execution."""
@@ -394,7 +458,8 @@ class PipelineProcessor:
         integration_id: str = "sarif-integration",
         repository_name: Optional[str] = None,
         repository_url: Optional[str] = None,
-        mapping_config_path: Optional[Path] = None
+        mapping_config_path: Optional[Path] = None,
+        cve_only: bool = False
     ):
         """Initialize processor with schema validators and optional mapping engine."""
         self.sarif_validator = SchemaValidator(sarif_schema_path)
@@ -415,7 +480,8 @@ class PipelineProcessor:
             integration_id,
             repository_name,
             repository_url,
-            self.mapping_engine
+            self.mapping_engine,
+            cve_only
         )
 
     def process_file(self, input_path: Path, output_path: Path) -> bool:
@@ -526,6 +592,10 @@ Examples:
   # With repository information (creates repositoryBranch assets)
   python sarif_to_wiz_converter.py --input scan.sarif --output scan.wiz.json \\
     --repository-name "my-repo" --repository-url "https://github.com/org/my-repo"
+
+  # CVE-only filtering (only include CVE-YYYY-NNNNN format findings)
+  python sarif_to_wiz_converter.py --input scan.sarif --output scan.wiz.json \\
+    --cve-only
         """
     )
 
@@ -586,6 +656,11 @@ Examples:
         help="Path to field mapping configuration (default: field_mappings.json in same dir)"
     )
     parser.add_argument(
+        "--cve-only",
+        action="store_true",
+        help="Only process CVE-related findings (CVE-YYYY-NNNNN format)"
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Enable verbose logging"
@@ -627,7 +702,8 @@ Examples:
             args.integration_id,
             args.repository_name,
             args.repository_url,
-            args.mapping_config
+            args.mapping_config,
+            args.cve_only
         )
     except Exception as e:
         logger.error(f"Failed to initialize processor: {e}")

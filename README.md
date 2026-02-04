@@ -86,6 +86,23 @@ python sarif_to_wiz_converter.py \
   --verbose
 ```
 
+### CVE-Only Filtering
+
+Filter findings to only include those with CVE identifiers (CVE-YYYY-NNNNN format):
+
+```bash
+python sarif_to_wiz_converter.py \
+  --input scan.sarif \
+  --output scan.wiz.json \
+  --cve-only
+```
+
+When using `--cve-only`, finding names are simplified to include only the CVE identifier:
+- **Without flag**: `CVE-2022-0235_node-fetch_2.6.1`
+- **With flag**: `CVE-2022-0235`
+
+This flag is useful for focusing on known vulnerabilities and filtering out proprietary or unidentified issues.
+
 ## Asset Types
 
 The converter supports two asset types depending on your use case:

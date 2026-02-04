@@ -197,3 +197,7 @@ For code findings pointing to source files:
 3. Try the simplified structure if issues persist
 4. Check if alternative asset types work better for your use case
 5. Reach out to Wiz support with diagnostic output if issues continue
+
+## CVE-Only Filtering
+
+The --cve-only flag filters findings to only include CVE-YYYY-NNNNN format vulnerabilities.
