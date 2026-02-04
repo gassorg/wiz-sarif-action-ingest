@@ -71,6 +71,34 @@
           "transform": "clean_fixed_version",
           "enabled": true,
           "description": "Fixed version from properties, empty if 'no fix available'"
+        },
+        {
+          "wiz_field": "startLine",
+          "source": "sarif_result",
+          "sarif_path": "locations[0].physicalLocation.region.startLine",
+          "enabled": true,
+          "description": "Start line for identified vulnerability"
+        },
+        {
+          "wiz_field": "startColumn",
+          "source": "sarif_result",
+          "sarif_path": "locations[0].physicalLocation.region.startColumn",
+          "enabled": true,
+          "description": "Start column for identified vulnerability"
+        },
+        {
+          "wiz_field": "endLine",
+          "source": "sarif_result",
+          "sarif_path": "locations[0].physicalLocation.region.endLine",
+          "enabled": true,
+          "description": "End line for identified vulnerability"
+        },
+        {
+          "wiz_field": "endColumn",
+          "source": "sarif_result",
+          "sarif_path": "locations[0].physicalLocation.region.endColumn",
+          "enabled": true,
+          "description": "End column for identified vulnerability"
         }
       ]
     },
