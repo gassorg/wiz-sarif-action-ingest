@@ -86,6 +86,7 @@ class SARIFtoWizConverter:
         integration_id: str = "sarif-integration",
         repository_name: Optional[str] = None,
         repository_url: Optional[str] = None,
+        branch_name: Optional[str] = None,
         mapping_engine: Optional[MappingEngine] = None,
         cve_only: bool = False
     ):
@@ -95,6 +96,7 @@ class SARIFtoWizConverter:
         self.integration_id = integration_id
         self.repository_name = repository_name
         self.repository_url = repository_url
+        self.branch_name = branch_name
         self.mapping_engine = mapping_engine
         self.cve_only = cve_only
         self.cve_pattern = re.compile(r'CVE-\d{4}-\d{4,}', re.IGNORECASE)
@@ -146,9 +148,12 @@ class SARIFtoWizConverter:
 
         tool_name = run.get("tool", {}).get("driver", {}).get("name", "unknown-tool")
 
-        # Generate data source ID based on repository name if available, otherwise use tool name
+        # Generate data source ID based on repository and branch name if available, otherwise use tool name
         if self.repository_name:
-            data_source_id = f"{self.repository_name}"
+            if self.branch_name:
+                data_source_id = f"{self.repository_name}/{self.branch_name}"
+            else:
+                data_source_id = f"{self.repository_name}"
         else:
             data_source_id = f"{tool_name}-run-{run_idx}"
 
@@ -241,7 +246,7 @@ class SARIFtoWizConverter:
                 "repositoryBranch": {
                     "assetId": asset_id,
                     "assetName": uri,
-                    "branchName": "main",
+                    "branchName": self.branch_name or "main",
                     "repository": {
                         "name": self.repository_name,
                         "url": self.repository_url
@@ -458,6 +463,7 @@ class PipelineProcessor:
         integration_id: str = "sarif-integration",
         repository_name: Optional[str] = None,
         repository_url: Optional[str] = None,
+        branch_name: Optional[str] = None,
         mapping_config_path: Optional[Path] = None,
         cve_only: bool = False
     ):
@@ -480,6 +486,7 @@ class PipelineProcessor:
             integration_id,
             repository_name,
             repository_url,
+            branch_name,
             self.mapping_engine,
             cve_only
         )
@@ -638,6 +645,12 @@ Examples:
         help="Repository URL for repositoryBranch asset type (e.g., 'https://github.com/org/my-repo')"
     )
     parser.add_argument(
+        "--branch-name",
+        type=str,
+        default=None,
+        help="Branch name for data source ID (e.g., 'main', 'develop'). Used with --repository-name"
+    )
+    parser.add_argument(
         "--sarif-schema",
         type=Path,
         default=Path(__file__).parent / "sarif-schema.json",
@@ -702,6 +715,7 @@ Examples:
             args.integration_id,
             args.repository_name,
             args.repository_url,
+            args.branch_name,
             args.mapping_config,
             args.cve_only
         )
