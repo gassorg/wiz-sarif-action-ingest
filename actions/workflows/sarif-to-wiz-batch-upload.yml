@@ -1,0 +1,122 @@
+name: SARIF to Wiz - Batch Convert & Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      sarif_input_dir:
+        description: 'Directory containing SARIF files'
+        required: true
+        default: '.sarif-reports'
+      repository_name:
+        description: 'Repository name (optional, for repositoryBranch assets)'
+        required: false
+      repository_url:
+        description: 'Repository URL (optional, required if repository_name provided)'
+        required: false
+      branch_name:
+        description: 'Branch name (optional, e.g. main, develop)'
+        required: false
+      cve_only:
+        description: 'Only process CVE-related findings'
+        required: false
+        type: boolean
+        default: false
+      wiz_api_config:
+        description: 'Path to uploader_config.json'
+        required: false
+        default: 'uploader_config.json'
+
+  push:
+    paths:
+      - '**.sarif'
+      - '**.json'
+
+jobs:
+  convert-and-upload:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create output directory
+        run: mkdir -p ./wiz-scan-results
+
+      - name: Convert SARIF files to Wiz format
+        run: |
+          python3 sarif_to_wiz_converter.py \
+            --input-dir "${{ github.event.inputs.sarif_input_dir || '.sarif-reports' }}" \
+            --output-dir ./wiz-scan-results \
+            ${{ github.event.inputs.repository_name && format('--repository-name {0}', github.event.inputs.repository_name) || '' }} \
+            ${{ github.event.inputs.repository_url && format('--repository-url {0}', github.event.inputs.repository_url) || '' }} \
+            ${{ github.event.inputs.branch_name && format('--branch-name {0}', github.event.inputs.branch_name) || '' }} \
+            ${{ github.event.inputs.cve_only && '--cve-only' || '' }} \
+            --verbose
+        continue-on-error: false
+
+      - name: Verify Wiz files were created
+        run: |
+          if [ -z "$(find ./wiz-scan-results -name '*.wiz.json' 2>/dev/null)" ]; then
+            echo "❌ No Wiz JSON files were created from SARIF conversion"
+            exit 1
+          fi
+          echo "✓ Successfully created Wiz JSON files:"
+          find ./wiz-scan-results -name '*.wiz.json' -type f
+
+      - name: Upload to Wiz platform
+        env:
+          WIZ_CONFIG_PATH: ${{ github.event.inputs.wiz_api_config || 'uploader_config.json' }}
+        run: |
+          # Find all converted Wiz files and upload them
+          for wiz_file in ./wiz-scan-results/**/*.wiz.json; do
+            if [ -f "$wiz_file" ]; then
+              echo "📤 Uploading: $wiz_file"
+              python3 upload_security_scan.py \
+                -c "$WIZ_CONFIG_PATH" \
+                -f "$wiz_file" || {
+                  echo "⚠️ Failed to upload $wiz_file, continuing with next file..."
+                  continue
+                }
+            fi
+          done
+          echo "✓ Upload process completed"
+
+      - name: Generate summary report
+        if: always()
+        run: |
+          echo "## SARIF to Wiz Conversion & Upload Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Conversion Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Input directory: ${{ github.event.inputs.sarif_input_dir || '.sarif-reports' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Output directory: ./wiz-scan-results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Converted Files" >> $GITHUB_STEP_SUMMARY
+          find ./wiz-scan-results -name '*.wiz.json' -type f | while read file; do
+            size=$(ls -lh "$file" | awk '{print $5}')
+            echo "- $(basename $file) ($size)" >> $GITHUB_STEP_SUMMARY
+          done || echo "No files converted" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
+          [ -n "${{ github.event.inputs.repository_name }}" ] && echo "- Repository: ${{ github.event.inputs.repository_name }}" >> $GITHUB_STEP_SUMMARY || true
+          [ -n "${{ github.event.inputs.branch_name }}" ] && echo "- Branch: ${{ github.event.inputs.branch_name }}" >> $GITHUB_STEP_SUMMARY || true
+          [ "${{ github.event.inputs.cve_only }}" = "true" ] && echo "- CVE-only mode: Enabled" >> $GITHUB_STEP_SUMMARY || true
+
+      - name: Upload Wiz results as artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: wiz-scan-results
+          path: ./wiz-scan-results/
+          retention-days: 30
