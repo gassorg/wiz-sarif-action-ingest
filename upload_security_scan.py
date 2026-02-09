@@ -310,6 +310,37 @@ def get_system_activity_status(system_activity_id):
 
 
 
+def load_config_from_env():
+    """
+    Load Wiz credentials from environment variables.
+    Environment variables take precedence over all other sources.
+    
+    Supported environment variables:
+    - WIZ_CLIENT_ID
+    - WIZ_CLIENT_SECRET
+    - WIZ_TOKEN_URL
+    - WIZ_API_ENDPOINT_URL
+    
+    Returns:
+        dict: Configuration from environment variables (only those that are set)
+    """
+    env_config = {}
+    env_mapping = {
+        'WIZ_CLIENT_ID': 'CLIENT_ID',
+        'WIZ_CLIENT_SECRET': 'CLIENT_SECRET',
+        'WIZ_TOKEN_URL': 'TOKEN_URL',
+        'WIZ_API_ENDPOINT_URL': 'API_ENDPOINT_URL'
+    }
+    
+    for env_var, config_key in env_mapping.items():
+        value = os.environ.get(env_var)
+        if value:
+            env_config[config_key] = value
+            logging.debug(f'Loaded {config_key} from environment variable {env_var}')
+    
+    return env_config
+
+
 def load_config(filename):
     with open(filename, 'r') as config_file:
         return json.load(config_file)
@@ -323,8 +354,14 @@ def main():
         args = parser.parse_args()
 
         # ---------------------------------------
-        # CONFIG BRANCH
+        # CONFIG BRANCH - Priority Order:
+        # 1. Environment variables (WIZ_*)
+        # 2. Config file (if provided)
+        # 3. Hardcoded defaults
         # ---------------------------------------
+        # Load environment variables (highest priority)
+        env_config = load_config_from_env()
+        
         if args and any(vars(args).values()):
             if not os.path.isfile(args.config_file):
                 raise Exception(f'Config file "{args.config_file}" not found.')
@@ -333,11 +370,12 @@ def main():
                 raise Exception(f'File path "{args.file_path}" not found.')
 
             config = load_config(args.config_file)
-
-            client_id = config.get("CLIENT_ID", CLIENT_ID)
-            client_secret = config.get("CLIENT_SECRET", CLIENT_SECRET)
-            token_url = config.get("TOKEN_URL", TOKEN_URL)
-            api_endpoint = config.get("API_ENDPOINT_URL", API_ENDPOINT_URL)
+            
+            # Merge configs: env vars override config file, which overrides defaults
+            client_id = env_config.get("CLIENT_ID", config.get("CLIENT_ID", CLIENT_ID))
+            client_secret = env_config.get("CLIENT_SECRET", config.get("CLIENT_SECRET", CLIENT_SECRET))
+            token_url = env_config.get("TOKEN_URL", config.get("TOKEN_URL", TOKEN_URL))
+            api_endpoint = env_config.get("API_ENDPOINT_URL", config.get("API_ENDPOINT_URL", API_ENDPOINT_URL))
 
             file_path = args.file_path
 
@@ -345,10 +383,14 @@ def main():
 
         else:
             # ---------------------------------------
-            # FALLBACK BRANCH
+            # FALLBACK BRANCH - Use environment variables or defaults
             # ---------------------------------------
-            token = get_token(CLIENT_ID, CLIENT_SECRET, TOKEN_URL)
-            api_endpoint = API_ENDPOINT_URL
+            client_id = env_config.get("CLIENT_ID", CLIENT_ID)
+            client_secret = env_config.get("CLIENT_SECRET", CLIENT_SECRET)
+            token_url = env_config.get("TOKEN_URL", TOKEN_URL)
+            api_endpoint = env_config.get("API_ENDPOINT_URL", API_ENDPOINT_URL)
+            
+            token = get_token(client_id, client_secret, token_url)
             file_path = FILE_ABSOLUTE_PATH
 
         # ---------------------------------------

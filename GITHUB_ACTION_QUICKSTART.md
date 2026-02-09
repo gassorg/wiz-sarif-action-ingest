@@ -2,19 +2,40 @@
 
 ## 5-Minute Setup
 
-### Step 1: Add Wiz Credentials
-Create `.gitignore` entry (if not exists):
+### Option 1: GitHub Secrets (Recommended)
+
+**Most secure method - no credentials in repository**
+
+1. Go to **Settings** → **Secrets and variables** → **Actions**
+2. Add repository secrets:
+   - `WIZ_CLIENT_ID`: Your Wiz client ID
+   - `WIZ_CLIENT_SECRET`: Your Wiz client secret
+   - `WIZ_TOKEN_URL`: `https://auth.app.wiz.io/oauth/token`
+   - `WIZ_API_ENDPOINT_URL`: `https://api.us17.app.wiz.io/graphql`
+
+Find these values in Wiz:
+- Client ID/Secret: **Settings** → **API Clients**
+- Token URL: **Tenant info** → **Authentication URL**
+- API Endpoint: **Tenant info** → **API Endpoint URL**
+
+**Done!** Workflow automatically uses these secrets.
+
+### Option 2: Config File (Alternative)
+
+If you prefer using a config file instead of secrets:
+
+1. Create `.gitignore` entry (if not exists):
 ```
 uploader_config.json
 ```
 
-Create `uploader_config.json` in repo root:
+2. Create `uploader_config.json` in repo root:
 ```json
 {
   "CLIENT_ID": "your-wiz-client-id",
   "CLIENT_SECRET": "your-wiz-client-secret",
-  "TOKEN_URL": "https://auth.app.wiz.io/oauth/token", #find this under tenant info > authentication url
-  "API_ENDPOINT_URL": "https://api.us17.app.wiz.io/graphql" #find this under tenant info > api endpoint url
+  "TOKEN_URL": "https://auth.app.wiz.io/oauth/token",
+  "API_ENDPOINT_URL": "https://api.us17.app.wiz.io/graphql"
 }
 ```
 
@@ -26,7 +47,7 @@ mkdir -p .sarif-reports
 Place SARIF files in `.sarif-reports/`
 
 ### Step 3: Workflow Is Ready
-The action file is already in `.github/workflows/sarif-to-wiz-batch-upload.yml`
+The action file is already in `actions/workflows/sarif-to-wiz-batch-upload.yml`
 
 ## Usage
 

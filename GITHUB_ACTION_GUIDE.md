@@ -14,9 +14,22 @@ This GitHub Action automates the conversion of SARIF security scan files to Wiz 
 
 ## Setup Requirements
 
-### 1. Wiz API Credentials
+### 1. Wiz API Credentials (Recommended: GitHub Secrets)
 
-Create `uploader_config.json` in your repository root:
+**Best Practice: Use GitHub Secrets for secure credential management**
+
+1. Go to **Settings** → **Secrets and variables** → **Actions**
+2. Add the following repository secrets:
+   - `WIZ_CLIENT_ID`: Your Wiz client ID
+   - `WIZ_CLIENT_SECRET`: Your Wiz client secret
+   - `WIZ_TOKEN_URL`: `https://auth.app.wiz.io/oauth/token` (or your region)
+   - `WIZ_API_ENDPOINT_URL`: `https://api.us17.app.wiz.io/graphql` (or your region)
+
+The workflow automatically uses these secrets as environment variables.
+
+**Alternative: Config File Method**
+
+If you prefer, create `uploader_config.json` in your repository root:
 
 ```json
 {
@@ -33,15 +46,10 @@ Create `uploader_config.json` in your repository root:
 uploader_config.json
 ```
 
-Alternatively, use GitHub Secrets:
-```yaml
-# In your workflow, set environment variables from secrets
-env:
-  WIZ_CLIENT_ID: ${{ secrets.WIZ_CLIENT_ID }}
-  WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
-  WIZ_TOKEN_URL: ${{ secrets.WIZ_TOKEN_URL }}
-  WIZ_API_ENDPOINT: ${{ secrets.WIZ_API_ENDPOINT }}
-```
+**Credential Priority Order** (first match wins):
+1. Environment variables (`WIZ_*` from GitHub Secrets)
+2. Config file (`uploader_config.json`)
+3. Hardcoded defaults (empty string)
 
 ### 2. SARIF Input Files
 
@@ -244,12 +252,46 @@ Then update `uploader_config.json` to reference these variables.
 - Verify artifact retention period not exceeded
 - Check storage limits on GitHub account
 
-## Best Practices
+## Environment Variables
 
-1. **Secure Credentials**
-   - Use GitHub Secrets for API credentials
-   - Never commit `uploader_config.json` with real credentials
-   - Rotate credentials periodically
+The workflow supports Wiz API credentials via environment variables:
+
+| Environment Variable | Script Variable | Description |
+|---------------------|-----------------|-------------|
+| `WIZ_CLIENT_ID` | `CLIENT_ID` | Wiz API client ID |
+| `WIZ_CLIENT_SECRET` | `CLIENT_SECRET` | Wiz API client secret |
+| `WIZ_TOKEN_URL` | `TOKEN_URL` | Wiz authentication endpoint |
+| `WIZ_API_ENDPOINT_URL` | `API_ENDPOINT_URL` | Wiz API GraphQL endpoint |
+
+### Setting Environment Variables
+
+**In GitHub Actions (Recommended):**
+1. Go to repository **Settings** → **Secrets and variables** → **Actions**
+2. Create repository secrets for each environment variable
+3. Workflow automatically loads them as `WIZ_*` environment variables
+
+**In Local Development:**
+```bash
+export WIZ_CLIENT_ID="your-client-id"
+export WIZ_CLIENT_SECRET="your-client-secret"
+export WIZ_TOKEN_URL="https://auth.app.wiz.io/oauth/token"
+export WIZ_API_ENDPOINT_URL="https://api.us17.app.wiz.io/graphql"
+
+python3 upload_security_scan.py -f scan.wiz.json
+```
+
+**Credential Resolution Order:**
+1. Environment variables (highest priority)
+2. Config file (`uploader_config.json`)
+3. Hardcoded defaults (lowest priority)
+
+
+1. **Secure Credentials (CRITICAL)**
+   - ✓ Use GitHub Secrets for API credentials (recommended)
+   - ✓ Never commit `uploader_config.json` with real credentials to repository
+   - ✓ Environment variables are more secure than config files
+   - ✓ Rotate credentials periodically
+   - ✓ Use least-privilege credentials (minimal required permissions)
 
 2. **Repository Context**
    - Always provide repository name and URL for tracking

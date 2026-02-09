@@ -35,6 +35,13 @@ jobs:
   convert-and-upload:
     runs-on: ubuntu-latest
     
+    env:
+      # Wiz API Credentials from GitHub Secrets
+      WIZ_CLIENT_ID: ${{ secrets.WIZ_CLIENT_ID }}
+      WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
+      WIZ_TOKEN_URL: ${{ secrets.WIZ_TOKEN_URL }}
+      WIZ_API_ENDPOINT_URL: ${{ secrets.WIZ_API_ENDPOINT_URL }}
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -76,19 +83,22 @@ jobs:
           find ./wiz-scan-results -name '*.wiz.json' -type f
 
       - name: Upload to Wiz platform
-        env:
-          WIZ_CONFIG_PATH: ${{ github.event.inputs.wiz_api_config || 'uploader_config.json' }}
         run: |
+          # Environment variables are automatically available (WIZ_CLIENT_ID, WIZ_CLIENT_SECRET, etc.)
+          # Config file is optional - upload_security_scan.py will use env vars or fall back to config file
+          config_option=""
+          if [ -f "${{ github.event.inputs.wiz_api_config || 'uploader_config.json' }}" ]; then
+            config_option="-c ${{ github.event.inputs.wiz_api_config || 'uploader_config.json' }}"
+          fi
+          
           # Find all converted Wiz files and upload them
           for wiz_file in ./wiz-scan-results/**/*.wiz.json; do
             if [ -f "$wiz_file" ]; then
               echo "📤 Uploading: $wiz_file"
-              python3 upload_security_scan.py \
-                -c "$WIZ_CONFIG_PATH" \
-                -f "$wiz_file" || {
-                  echo "⚠️ Failed to upload $wiz_file, continuing with next file..."
-                  continue
-                }
+              python3 upload_security_scan.py $config_option -f "$wiz_file" || {
+                echo "⚠️ Failed to upload $wiz_file, continuing with next file..."
+                continue
+              }
             fi
           done
           echo "✓ Upload process completed"
