@@ -26,6 +26,36 @@ pip install -r requirements.txt
 chmod +x sarif_to_wiz_converter.py
 ```
 
+## Documentation
+
+All detailed documentation has been organized in the `docs/` directory. Here's a quick guide to find what you need:
+
+### Quick Start & Setup
+- **[GitHub Action Quick Start](docs/GITHUB_ACTION_QUICKSTART.md)** - 5-minute setup guide for GitHub Actions workflow
+- **[Root Directory Guide](docs/ROOT_DIRECTORY_GUIDE.md)** - Understanding the project structure
+
+### GitHub Actions Workflow
+- **[GitHub Action Guide](docs/GITHUB_ACTION_GUIDE.md)** - Complete reference for the automated SARIF to Wiz workflow
+- **[Environment Variables Guide](docs/UPLOAD_SCRIPT_ENV_VARS.md)** - Using GitHub Secrets for secure credential management
+
+### Features & Configuration
+- **[CVE-Only Feature](docs/CVE_ONLY_FEATURE.md)** - Filter findings to CVE identifiers only
+- **[Repository Feature Guide](docs/REPOSITORY_FEATURE.md)** - Using repository context for asset tracking
+- **[Repository Quick Reference](docs/REPOSITORY_FEATURE_QUICKREF.md)** - Quick syntax reference for repository options
+
+### Advanced Topics
+- **[Field Mapping Guide](docs/FIELD_MAPPING_GUIDE.md)** - Customizing SARIF to Wiz field mapping
+- **[Field Mapping Implementation](docs/FIELD_MAPPING_IMPLEMENTATION.md)** - Technical details of field mapping engine
+- **[Field Mapping Diagram](docs/FIELD_MAPPING_DIAGRAM.md)** - Visual representation of field mappings
+- **[Field Mapping Visual Guide](docs/FIELD_MAPPING_VISUAL_GUIDE.md)** - Interactive guide for field mapping
+- **[Mapping Quick Start](docs/MAPPING_QUICKSTART.md)** - Fast setup for custom field mappings
+
+### Troubleshooting & Reference
+- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Solutions for common issues
+- **[Project Structure](docs/PROJECT_STRUCTURE.md)** - Detailed project layout and organization
+- **[Organization](docs/ORGANIZATION.md)** - Code organization and architecture
+- **[Resolution Summary](docs/RESOLUTION_SUMMARY.md)** - Summary of recent changes and resolutions
+
 ## Usage
 
 ### Single File Conversion
@@ -148,40 +178,108 @@ Used when `--repository-name` and `--repository-url` are provided. Best for code
 
 ### GitHub Actions
 
-```yaml
-name: Convert SARIF to Wiz Format
+A complete GitHub Action workflow is provided for batch SARIF conversion and upload to Wiz. 
 
-on: [push]
+**Workflow File**: [actions/workflows/sarif-to-wiz-batch-upload.yml](actions/workflows/sarif-to-wiz-batch-upload.yml)
+
+#### Features:
+- ✓ Batch converts all SARIF files in a directory
+- ✓ Automatically uploads converted files to Wiz platform
+- ✓ Supports manual trigger (workflow_dispatch) and automatic trigger (on SARIF file push)
+- ✓ Integrates with GitHub Secrets for secure credential management
+- ✓ Generates workflow summary report with results
+- ✓ Stores artifacts for 30 days
+
+#### Setup:
+1. Add repository secrets (Settings → Secrets and variables → Actions):
+   - `WIZ_CLIENT_ID`
+   - `WIZ_CLIENT_SECRET`
+   - `WIZ_TOKEN_URL`
+   - `WIZ_API_ENDPOINT_URL`
+
+2. Create `.sarif-reports/` directory and place SARIF files there
+
+3. Trigger the workflow:
+   - **Manual**: Go to Actions → Run workflow
+   - **Automatic**: Commit SARIF files and push
+
+#### Workflow Example:
+
+For a complete, production-ready workflow with batch conversion and upload, use the provided GitHub Action:
+
+```yaml
+name: SARIF to Wiz - Batch Convert & Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      sarif_input_dir:
+        description: 'Directory containing SARIF files'
+        required: true
+        default: '.sarif-reports'
+      repository_name:
+        description: 'Repository name (optional, for repositoryBranch assets)'
+        required: false
+      branch_name:
+        description: 'Branch name (optional, e.g. main, develop)'
+        required: false
+      cve_only:
+        description: 'Only process CVE-related findings'
+        required: false
+        type: boolean
+  push:
+    paths:
+      - '**.sarif'
+      - '**.json'
 
 jobs:
-  convert:
+  convert-and-upload:
     runs-on: ubuntu-latest
+    env:
+      WIZ_CLIENT_ID: ${{ secrets.WIZ_CLIENT_ID }}
+      WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
+      WIZ_TOKEN_URL: ${{ secrets.WIZ_TOKEN_URL }}
+      WIZ_API_ENDPOINT_URL: ${{ secrets.WIZ_API_ENDPOINT_URL }}
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      
-      - name: Convert SARIF results
+
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - run: mkdir -p ./wiz-scan-results
+
+      - run: |
+          python3 sarif_to_wiz_converter.py \
+            --input-dir "${{ github.event.inputs.sarif_input_dir || '.sarif-reports' }}" \
+            --output-dir ./wiz-scan-results \
+            --verbose
+
+      - name: Upload to Wiz platform
         run: |
-          python sarif_to_wiz_converter.py \
-            --input-dir ./sarif-results \
-            --output-dir ./wiz-results \
-            --integration-id github-actions-scan \
-            --repository-name ${{ github.repository }} \
-            --repository-url ${{ github.server_url }}/${{ github.repository }}
-      
-      - name: Upload Wiz format results
-        uses: actions/upload-artifact@v3
+          for wiz_file in ./wiz-scan-results/**/*.wiz.json; do
+            if [ -f "$wiz_file" ]; then
+              python3 upload_security_scan.py -f "$wiz_file"
+            fi
+          done
+
+      - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: wiz-results
-          path: wiz-results/
+          name: wiz-scan-results
+          path: ./wiz-scan-results/
+          retention-days: 30
 ```
+
+**For the full workflow with all features**, see [actions/workflows/sarif-to-wiz-batch-upload.yml](actions/workflows/sarif-to-wiz-batch-upload.yml).
+
+**For GitHub Action setup and configuration**, see [docs/GITHUB_ACTION_GUIDE.md](docs/GITHUB_ACTION_GUIDE.md).
 
 ### GitLab CI
 
