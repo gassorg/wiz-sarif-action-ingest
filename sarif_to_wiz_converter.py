@@ -153,7 +153,7 @@ class SARIFtoWizConverter:
             if self.branch_name:
                 data_source_id = f"{self.repository_name}/{self.branch_name}"
             else:
-                data_source_id = f"{self.repository_name}"
+                data_source_id = f"{self.repository_name}/main"
         else:
             data_source_id = f"{tool_name}-run-{run_idx}"
 
