@@ -92,7 +92,7 @@ If `assetEndpoint` is not working, try alternative approaches:
 
 4. **Enable Verbose Logging**
    ```bash
-   python3 sarif_to_wiz_converter.py --input inputs/sarif.json --output test.json --verbose
+   python3 sarif_to_wiz_converter.py --input tests/data/inputs/sarif.json --output test.json --verbose
    ```
 
 5. **Contact Wiz Support**

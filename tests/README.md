@@ -4,7 +4,7 @@ This directory contains all test-related files for the SARIF to Wiz converter pr
 
 ## Contents
 
-### test_repository_feature.py
+### `test_repository_feature.py`
 Comprehensive test script that validates:
 - Default mode (virtualMachine asset type)
 - Repository mode (repositoryBranch asset type)
@@ -15,6 +15,19 @@ Comprehensive test script that validates:
 ```bash
 python test_repository_feature.py
 ```
+
+### `examples/`
+Example usage scripts and utilities:
+- `example_usage.py` - Basic converter usage example
+- `example_mapping_usage.py` - Field mapping engine examples
+- `diagnose_wiz_json.py` - Utility to diagnose Wiz JSON output
+- `upload_security_scan.py` - Upload findings to Wiz API
+- `uploader_config.json` - Configuration for uploader
+
+### `data/`
+Test data and expected outputs:
+- `inputs/` - Sample SARIF files for testing
+- `outputs/` - Expected converter output examples
 
 ## Usage
 
@@ -77,5 +90,5 @@ All tests should display:
 ## Related Files
 
 - Main converter: `../sarif_to_wiz_converter.py`
-- Sample data: `../inputs/`
-- Output examples: `../outputs/`
+- Sample data: `./data/inputs/`
+- Output examples: `./data/outputs/`

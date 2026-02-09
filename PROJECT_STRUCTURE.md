@@ -107,7 +107,7 @@ Contains example outputs and test results:
 ### Running the Converter
 ```bash
 # Default mode (virtualMachine assets)
-python sarif_to_wiz_converter.py --input inputs/sarif.json --output output.wiz.json
+python sarif_to_wiz_converter.py --input tests/data/inputs/sarif.json --output output.wiz.json
 
 # Repository mode (repositoryBranch assets)
 python sarif_to_wiz_converter.py --input samples/sarif.json --output output.wiz.json \
