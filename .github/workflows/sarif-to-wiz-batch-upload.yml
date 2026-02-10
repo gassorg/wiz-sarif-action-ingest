@@ -26,13 +26,12 @@ on:
         required: false
         default: 'uploader_config.json'
 
-  push:
-    paths:
-      - '**.sarif'
-      - '**.json'
+  pull_request:
+    types: [closed]
 
 jobs:
   convert-and-upload:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     
     env:
