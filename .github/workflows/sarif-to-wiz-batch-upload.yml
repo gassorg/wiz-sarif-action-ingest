@@ -1,9 +1,5 @@
 name: SARIF to Wiz - Batch Convert & Upload
 
-permissions:
-  contents: read
-  id-token: write
-
 on:
   workflow_dispatch:
     inputs:
