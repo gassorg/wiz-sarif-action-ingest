@@ -1,30 +1,39 @@
 name: SARIF to Wiz - Batch Convert & Upload
 
 on:
-  workflow_dispatch:
+
+  workflow_call:
     inputs:
       sarif_input_dir:
-        description: 'Directory containing SARIF files'
         required: true
+        type: string
         default: '.sarif-reports'
       repository_name:
-        description: 'Repository name (optional, for repositoryBranch assets)'
         required: false
+        type: string
       repository_url:
-        description: 'Repository URL (optional, required if repository_name provided)'
         required: false
+        type: string
       branch_name:
-        description: 'Branch name (optional, e.g. main, develop)'
         required: false
+        type: string
       cve_only:
-        description: 'Only process CVE-related findings'
         required: false
         type: boolean
         default: false
       wiz_api_config:
-        description: 'Path to uploader_config.json'
         required: false
+        type: string
         default: 'uploader_config.json'
+    secrets:
+      WIZ_CLIENT_ID:
+        required: true
+      WIZ_CLIENT_SECRET:
+        required: true
+      WIZ_TOKEN_URL:
+        required: true
+      WIZ_API_ENDPOINT_URL:
+        required: true
 
   pull_request:
     branches:
