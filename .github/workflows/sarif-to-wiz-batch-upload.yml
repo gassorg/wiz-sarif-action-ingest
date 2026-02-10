@@ -27,7 +27,8 @@ on:
         default: 'uploader_config.json'
 
   pull_request:
-    types: [closed]
+    branches:
+      - main
 
 jobs:
   convert-and-upload:
