@@ -53,6 +53,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Checkout code wiz sarif repo
+        uses: actions/checkout@v3
+        with:
+          repository: gassorg/wiz-sarif-action-ingest
+          path: wiz-tools
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -62,14 +68,14 @@ jobs:
         run: |
           ls -latr
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r ./wiz-tools/wiz-sarif-action-ingest/requirements.txt
 
       - name: Create output directory
         run: mkdir -p ./wiz-scan-results
 
       - name: Convert SARIF files to Wiz format
         run: |
-          python3 sarif_to_wiz_converter.py \
+          python3 ./wiz-tools/wiz-sarif-action-ingest/sarif_to_wiz_converter.py \
             --input-dir "${{ github.event.inputs.sarif_input_dir || '.sarif-reports' }}" \
             --output-dir ./wiz-scan-results \
             ${{ github.event.inputs.repository_name && format('--repository-name {0}', github.event.inputs.repository_name) || '' }} \
@@ -101,7 +107,7 @@ jobs:
           for wiz_file in ./wiz-scan-results/**/*.wiz.json; do
             if [ -f "$wiz_file" ]; then
               echo "📤 Uploading: $wiz_file"
-              python3 upload_security_scan.py $config_option -f "$wiz_file" || {
+              python3 ./wiz-tools/wiz-sarif-action-ingest/upload_security_scan.py $config_option -f "$wiz_file" || {
                 echo "⚠️ Failed to upload $wiz_file, continuing with next file..."
                 continue
               }
