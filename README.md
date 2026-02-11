@@ -208,73 +208,26 @@ A complete GitHub Action workflow is provided for batch SARIF conversion and upl
 For a complete, production-ready workflow with batch conversion and upload, use the provided GitHub Action:
 
 ```yaml
-name: SARIF to Wiz - Batch Convert & Upload
-
+name: Call SARIF to Wiz Action
 on:
-  workflow_dispatch:
-    inputs:
-      sarif_input_dir:
-        description: 'Directory containing SARIF files'
-        required: true
-        default: '.sarif-reports'
-      repository_name:
-        description: 'Repository name (optional, for repositoryBranch assets)'
-        required: false
-      branch_name:
-        description: 'Branch name (optional, e.g. main, develop)'
-        required: false
-      cve_only:
-        description: 'Only process CVE-related findings'
-        required: false
-        type: boolean
   push:
-    paths:
-      - '**.sarif'
-      - '**.json'
+    branches:
+      - main
 
 jobs:
-  convert-and-upload:
-    runs-on: ubuntu-latest
-    env:
+  convert-upload:
+    uses: gassorg/wiz-sarif-action-ingest/.github/workflows/action.yml@main
+    with:
+      sarif_input_dir: './sarif_data'
+      repository_name: ${{ github.repository }}
+      repository_url: ${{ github.server_url }}/${{ github.repository }}
+      branch_name: ${{ github.ref_name }}
+      cve_only: true
+    secrets:
       WIZ_CLIENT_ID: ${{ secrets.WIZ_CLIENT_ID }}
       WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
       WIZ_TOKEN_URL: ${{ secrets.WIZ_TOKEN_URL }}
       WIZ_API_ENDPOINT_URL: ${{ secrets.WIZ_API_ENDPOINT_URL }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - run: mkdir -p ./wiz-scan-results
-
-      - run: |
-          python3 sarif_to_wiz_converter.py \
-            --input-dir "${{ github.event.inputs.sarif_input_dir || '.sarif-reports' }}" \
-            --output-dir ./wiz-scan-results \
-            --verbose
-
-      - name: Upload to Wiz platform
-        run: |
-          for wiz_file in ./wiz-scan-results/**/*.wiz.json; do
-            if [ -f "$wiz_file" ]; then
-              python3 upload_security_scan.py -f "$wiz_file"
-            fi
-          done
-
-      - uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: wiz-scan-results
-          path: ./wiz-scan-results/
-          retention-days: 30
 ```
 
 **For the full workflow with all features**, see [actions/workflows/sarif-to-wiz-batch-upload.yml](actions/workflows/sarif-to-wiz-batch-upload.yml).

@@ -35,8 +35,6 @@ on:
         required: true
       WIZ_API_ENDPOINT_URL:
         required: true
-      SHARED_ACCESS_TOKEN:
-        required: true
 
 jobs:
   convert-and-upload:
@@ -48,7 +46,6 @@ jobs:
       WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
       WIZ_TOKEN_URL: ${{ secrets.WIZ_TOKEN_URL }}
       WIZ_API_ENDPOINT_URL: ${{ secrets.WIZ_API_ENDPOINT_URL }}
-      SHARED_ACCESS_TOKEN: ${{ secrets.SHARED_ACCESS_TOKEN }}
     
     steps:
       - name: Checkout code
@@ -61,7 +58,6 @@ jobs:
         with:
           repository: gassorg/wiz-sarif-action-ingest
           path: wiz-sarif-action-ingest
-          token: ${{ secrets.SHARED_ACCESS_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
