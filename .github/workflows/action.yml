@@ -80,12 +80,12 @@ jobs:
       - name: Convert SARIF files to Wiz format
         run: |
           python3 ./wiz-sarif-action-ingest/sarif_to_wiz_converter.py \
-            --input-dir "${{ github.event.inputs.sarif_input_dir || '.sarif-reports' }}" \
+            --input-dir "${{ inputs.sarif_input_dir || '.sarif-reports' }}" \
             --output-dir ./wiz-scan-results \
-            ${{ github.event.inputs.repository_name && format('--repository-name {0}', github.event.inputs.repository_name) || '' }} \
-            ${{ github.event.inputs.repository_url && format('--repository-url {0}', github.event.inputs.repository_url) || '' }} \
-            ${{ github.event.inputs.branch_name && format('--branch-name {0}', github.event.inputs.branch_name) || '' }} \
-            ${{ github.event.inputs.cve_only && '--cve-only' || '' }} \
+            ${{ inputs.repository_name && format('--repository-name {0}', inputs.repository_name) || '' }} \
+            ${{ inputs.repository_url && format('--repository-url {0}', inputs.repository_url) || '' }} \
+            ${{ inputs.branch_name && format('--branch-name {0}', inputs.branch_name) || '' }} \
+            ${{ inputs.cve_only && '--cve-only' || '' }} \
             --verbose
         continue-on-error: false
 
@@ -103,8 +103,8 @@ jobs:
           # Environment variables are automatically available (WIZ_CLIENT_ID, WIZ_CLIENT_SECRET, etc.)
           # Config file is optional - upload_security_scan.py will use env vars or fall back to config file
           config_option=""
-          if [ -f "${{ github.event.inputs.wiz_api_config || 'uploader_config.json' }}" ]; then
-            config_option="-c ${{ github.event.inputs.wiz_api_config || 'uploader_config.json' }}"
+          if [ -f "${{ inputs.wiz_api_config || 'uploader_config.json' }}" ]; then
+            config_option="-c ${{ inputs.wiz_api_config || 'uploader_config.json' }}"
           fi
           
           # Find all converted Wiz files and upload them
@@ -125,7 +125,7 @@ jobs:
           echo "## SARIF to Wiz Conversion & Upload Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Conversion Results" >> $GITHUB_STEP_SUMMARY
-          echo "- Input directory: ${{ github.event.inputs.sarif_input_dir || '.sarif-reports' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Input directory: ${{ inputs.sarif_input_dir || '.sarif-reports' }}" >> $GITHUB_STEP_SUMMARY
           echo "- Output directory: ./wiz-scan-results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Converted Files" >> $GITHUB_STEP_SUMMARY
@@ -135,6 +135,6 @@ jobs:
           done || echo "No files converted" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Configuration" >> $GITHUB_STEP_SUMMARY
-          [ -n "${{ github.event.inputs.repository_name }}" ] && echo "- Repository: ${{ github.event.inputs.repository_name }}" >> $GITHUB_STEP_SUMMARY || true
-          [ -n "${{ github.event.inputs.branch_name }}" ] && echo "- Branch: ${{ github.event.inputs.branch_name }}" >> $GITHUB_STEP_SUMMARY || true
-          [ "${{ github.event.inputs.cve_only }}" = "true" ] && echo "- CVE-only mode: Enabled" >> $GITHUB_STEP_SUMMARY || true
+          [ -n "${{ inputs.repository_name }}" ] && echo "- Repository: ${{ inputs.repository_name }}" >> $GITHUB_STEP_SUMMARY || true
+          [ -n "${{ inputs.branch_name }}" ] && echo "- Branch: ${{ inputs.branch_name }}" >> $GITHUB_STEP_SUMMARY || true
+          [ "${{ inputs.cve_only }}" = "true" ] && echo "- CVE-only mode: Enabled" >> $GITHUB_STEP_SUMMARY || true
