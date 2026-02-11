@@ -48,7 +48,7 @@ jobs:
       WIZ_CLIENT_SECRET: ${{ secrets.WIZ_CLIENT_SECRET }}
       WIZ_TOKEN_URL: ${{ secrets.WIZ_TOKEN_URL }}
       WIZ_API_ENDPOINT_URL: ${{ secrets.WIZ_API_ENDPOINT_URL }}
-      TOKEN: ${{ secrets.SHARED_ACCESS_TOKEN }}
+      SHARED_ACCESS_TOKEN: ${{ secrets.SHARED_ACCESS_TOKEN }}
     
     steps:
       - name: Checkout code
