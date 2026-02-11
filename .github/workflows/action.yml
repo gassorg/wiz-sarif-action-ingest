@@ -127,11 +127,3 @@ jobs:
           [ -n "${{ github.event.inputs.repository_name }}" ] && echo "- Repository: ${{ github.event.inputs.repository_name }}" >> $GITHUB_STEP_SUMMARY || true
           [ -n "${{ github.event.inputs.branch_name }}" ] && echo "- Branch: ${{ github.event.inputs.branch_name }}" >> $GITHUB_STEP_SUMMARY || true
           [ "${{ github.event.inputs.cve_only }}" = "true" ] && echo "- CVE-only mode: Enabled" >> $GITHUB_STEP_SUMMARY || true
-
-      - name: Upload Wiz results as artifact
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: wiz-scan-results
-          path: ./wiz-scan-results/
-          retention-days: 30
