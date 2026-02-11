@@ -1,4 +1,5 @@
 name: SARIF to Wiz - Batch Convert & Upload
+description: A reusable workflow to convert SARIF files to Wiz format and upload them to the Wiz platform. This workflow can be called from other workflows or triggered on pull request merges.
 
 on:
 
@@ -35,13 +36,8 @@ on:
       WIZ_API_ENDPOINT_URL:
         required: true
 
-  pull_request:
-    branches:
-      - main
-
 jobs:
   convert-and-upload:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     
     env:
