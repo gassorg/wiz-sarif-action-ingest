@@ -50,7 +50,7 @@ jobs:
         with:
           repository: gassorg/wiz-sarif-action-ingest
           path: wiz-tools
-          token: ${{ env.SHARED_ACCESS_TOKEN }}
+          token: ${{ secrets.SHARED_ACCESS_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
