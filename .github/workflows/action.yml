@@ -26,6 +26,17 @@ on:
         required: false
         type: string
         default: 'uploader_config.json'
+    secrets:
+      WIZ_CLIENT_ID:
+        required: true
+      WIZ_CLIENT_SECRET:
+        required: true
+      WIZ_TOKEN_URL:
+        required: true
+      WIZ_API_ENDPOINT_URL:
+        required: true
+      SHARED_ACCESS_TOKEN:
+        required: true
 
 jobs:
   convert-and-upload:
@@ -50,7 +61,7 @@ jobs:
         with:
           repository: gassorg/wiz-sarif-action-ingest
           path: wiz-tools
-          token: ${{ secrets.SHARED_ACCESS_TOKEN }}
+          token: ${{ env.SHARED_ACCESS_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
