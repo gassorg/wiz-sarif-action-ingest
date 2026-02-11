@@ -26,17 +26,6 @@ on:
         required: false
         type: string
         default: 'uploader_config.json'
-    secrets:
-      WIZ_CLIENT_ID:
-        required: true
-      WIZ_CLIENT_SECRET:
-        required: true
-      WIZ_TOKEN_URL:
-        required: true
-      WIZ_API_ENDPOINT_URL:
-        required: true
-      SHARED_ACCESS_TOKEN:
-        required: true
 
 jobs:
   convert-and-upload:
