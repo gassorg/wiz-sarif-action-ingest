@@ -92,10 +92,11 @@ python sarif_to_wiz_converter.py \
   --input path/to/scan.sarif \
   --output path/to/scan.wiz.json \
   --repository-name "my-app" \
-  --repository-url "https://github.com/org/my-app"
+  --repository-url "https://github.com/org/my-app" \
+  --branch-name "main"
 ```
 
-**Note**: Both `--repository-name` and `--repository-url` must be specified together. Omitting both will use the default `virtualMachine` asset type.
+**Note**: Both `--repository-name` and `--repository-url` must be specified together. The `--branch-name` parameter is optional (defaults to "main"). Omitting both repository parameters will use the default `virtualMachine` asset type.
 
 ### Custom Schema Paths
 
@@ -180,12 +181,12 @@ Used when `--repository-name` and `--repository-url` are provided. Best for code
 
 A complete GitHub Action workflow is provided for batch SARIF conversion and upload to Wiz. 
 
-**Workflow File**: [actions/workflows/sarif-to-wiz-batch-upload.yml](actions/workflows/sarif-to-wiz-batch-upload.yml)
+**Workflow File**: [.github/workflows/action.yml](.github/workflows/action.yml)
 
 #### Features:
 - ✓ Batch converts all SARIF files in a directory
 - ✓ Automatically uploads converted files to Wiz platform
-- ✓ Supports manual trigger (workflow_dispatch) and automatic trigger (on SARIF file push)
+- ✓ Reusable workflow that can be called from other repositories
 - ✓ Integrates with GitHub Secrets for secure credential management
 - ✓ Generates workflow summary report with results
 - ✓ Stores artifacts for 30 days
@@ -197,11 +198,7 @@ A complete GitHub Action workflow is provided for batch SARIF conversion and upl
    - `WIZ_TOKEN_URL`
    - `WIZ_API_ENDPOINT_URL`
 
-2. Create `.sarif-reports/` directory and place SARIF files there
-
-3. Trigger the workflow:
-   - **Manual**: Go to Actions → Run workflow
-   - **Automatic**: Commit SARIF files and push
+2. Call this reusable workflow from your repository's workflow file (see example below)
 
 #### Workflow Example:
 
@@ -230,7 +227,7 @@ jobs:
       WIZ_API_ENDPOINT_URL: ${{ secrets.WIZ_API_ENDPOINT_URL }}
 ```
 
-**For the full workflow with all features**, see [actions/workflows/sarif-to-wiz-batch-upload.yml](actions/workflows/sarif-to-wiz-batch-upload.yml).
+**For the full workflow with all features**, see [.github/workflows/action.yml](.github/workflows/action.yml).
 
 **For GitHub Action setup and configuration**, see [docs/GITHUB_ACTION_GUIDE.md](docs/GITHUB_ACTION_GUIDE.md).
 
@@ -276,8 +273,13 @@ pipeline {
         stage('Upload to Wiz') {
             steps {
                 script {
-                    // Future: Upload to Wiz API
-                    sh 'ls -la wiz-results/'
+                    // Upload converted files to Wiz API
+                    // See docs/UPLOAD_SCRIPT_ENV_VARS.md for environment variable configuration
+                    sh '''
+                        for wiz_file in ./wiz-results/*.wiz.json; do
+                            python upload_security_scan.py -f "$wiz_file"
+                        done
+                    '''
                 }
             }
         }
@@ -316,10 +318,10 @@ The converter produces JSON files conforming to the Wiz vulnerability ingestion 
         {
           "analysisDate": "2024-01-22T10:30:45.123Z",
           "details": {
-            "assetEndpoint": {
-              "assetId": "file.js-0",
-              "assetName": "src/file.js",
-              "host": "src/file.js",
+            "virtualMachine": {
+              "assetId": "src/file.js",
+              "name": "src/file.js",
+              "hostname": "src/file.js",
               "firstSeen": "2024-01-22T10:30:45.123Z"
             }
           },
@@ -350,7 +352,7 @@ The converter produces JSON files conforming to the Wiz vulnerability ingestion 
 | `result.message.text` | `vulnerabilityFinding.description` | Finding description |
 | `result.ruleId` | `vulnerabilityFinding.name` | Finding name/identifier |
 | `result.level` | `vulnerabilityFinding.severity` | Mapped: none→None, note→Low, warning→Medium, error→High |
-| `result.locations[].physicalLocation.artifactLocation.uri` | `asset.assetEndpoint.host` | File path as asset identifier |
+| `result.locations[].physicalLocation.artifactLocation.uri` | `asset.details.virtualMachine.hostname` or `asset.details.repositoryBranch.assetName` | File path as asset identifier |
 
 ## Architecture
 
